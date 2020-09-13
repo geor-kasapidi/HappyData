@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="17189" systemVersion="19F101" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Author" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="YES"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="books" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Book" inverseName="authors" inverseEntity="Book"/>
+        <relationship name="orderedBooks" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Book" inverseName="orderedAuthors" inverseEntity="Book"/>
+    </entity>
+    <entity name="Book" representedClassName="" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="YES"/>
+        <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" attributeType="String"/>
+        <relationship name="authors" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Author" inverseName="books" inverseEntity="Author"/>
+        <relationship name="cover" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookCover" inverseName="book" inverseEntity="BookCover"/>
+        <relationship name="orderedAuthors" optional="YES" toMany="YES" deletionRule="Nullify" ordered="YES" destinationEntity="Author" inverseName="orderedBooks" inverseEntity="Author"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="id"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
+    <entity name="BookCover" representedClassName="" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="imageData" attributeType="Binary"/>
+        <relationship name="book" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Book" inverseName="cover" inverseEntity="Book"/>
+        <relationship name="foo" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Foo" inverseName="cover" inverseEntity="Foo"/>
+    </entity>
+    <entity name="BookRef" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="text" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="Foo" representedClassName="" syncable="YES">
+        <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="cover" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="BookCover" inverseName="foo" inverseEntity="BookCover"/>
+    </entity>
+    <entity name="FullHouse" representedClassName="" syncable="YES">
+        <attribute name="x1" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="x2" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="x3" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="x4" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="x5" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="x6" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="x7" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="x8" optional="YES" attributeType="String"/>
+        <attribute name="x9" optional="YES" attributeType="Binary"/>
+        <attribute name="x10" optional="YES" attributeType="URI"/>
+        <attribute name="x11" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="x12" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="x13" optional="YES" attributeType="String"/>
+    </entity>
+    <elements>
+        <element name="Author" positionX="-63" positionY="-18" width="128" height="103"/>
+        <element name="Book" positionX="242.53515625" positionY="-36.46875" width="128" height="133"/>
+        <element name="BookCover" positionX="90" positionY="0" width="128" height="103"/>
+        <element name="BookRef" positionX="90" positionY="90" width="128" height="73"/>
+        <element name="Foo" positionX="90" positionY="9" width="128" height="73"/>
+        <element name="FullHouse" positionX="90" positionY="18" width="128" height="238"/>
+    </elements>
+</model>
