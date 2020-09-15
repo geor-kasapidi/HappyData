@@ -13,7 +13,7 @@ public struct PersistentWriter {
         _ closure: @escaping (inout MutableManagedObject<PlainObject>) -> Void
     ) throws {
         var managedObject = MutableManagedObject<PlainObject>(
-            self.instance.new(entity: PlainObject.entityName)
+            instance: self.instance.new(entity: PlainObject.entityName)
         )
         closure(&managedObject)
     }
@@ -34,7 +34,7 @@ public struct PersistentWriter {
         )
         let managedObjects = try self.instance.fetch(fetchRequest)
         return try managedObjects.map {
-            var managedObject = MutableManagedObject<PlainObject>($0)
+            var managedObject = MutableManagedObject<PlainObject>(instance: $0)
             return try closure(&managedObject)
         }
     }
@@ -107,7 +107,7 @@ public struct PersistentReader {
             ofType: (NSManagedObject.self, .managedObjectResultType)
         )
         return try self.instance.fetch(fetchRequest).map {
-            try closure(.init($0))
+            try closure(.init(instance: $0))
         }
     }
 

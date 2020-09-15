@@ -14,10 +14,10 @@ public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
         self.name = name
         self.keyPath = keyPath
         self.encode = { plainObject, managedObject in
-            managedObject[primitiveKey: name] = plainObject[keyPath: keyPath].encodePrimitive()
+            managedObject[primitiveValue: name] = plainObject[keyPath: keyPath].encodePrimitive()
         }
         self.decode = { plainObject, managedObject in
-            let primitiveValue = managedObject[primitiveKey: name]
+            let primitiveValue = managedObject[primitiveValue: name]
             do {
                 plainObject[keyPath: keyPath] = try Attribute.decodePrimitive(
                     value: primitiveValue
@@ -40,10 +40,10 @@ public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
         self.name = name
         self.keyPath = keyPath
         self.encode = { plainObject, managedObject in
-            managedObject[primitiveKey: name] = plainObject[keyPath: keyPath].encodePrimitive()
+            managedObject[primitiveValue: name] = plainObject[keyPath: keyPath].encodePrimitive()
         }
         self.decode = { plainObject, managedObject in
-            let primitiveValue = managedObject[primitiveKey: name]
+            let primitiveValue = managedObject[primitiveValue: name]
             do {
                 plainObject[keyPath: keyPath] = try Attribute.decodePrimitive(
                     value: primitiveValue

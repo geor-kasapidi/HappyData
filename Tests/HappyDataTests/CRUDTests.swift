@@ -245,7 +245,8 @@ final class CRUDTests: XCTestCase {
                         .all
                         .sort(asc: \.date)
                         .sort(asc: \.name)
-                        .limit(8, offset: 1),
+                        .limit(8)
+                        .offset(1),
                     attribute: \.name
                 )
             })

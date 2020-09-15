@@ -7,7 +7,7 @@ public struct ManagedObjectSet<PlainObject: ManagedObjectConvertible>: Sequence 
 
         public mutating func next() -> ManagedObject<PlainObject>? {
             return (self.iterator.next() as? NSManagedObject).flatMap {
-                .init($0)
+                .init(instance: $0)
             }
         }
     }
@@ -25,7 +25,7 @@ public struct MutableManagedObjectSet<PlainObject: ManagedObjectConvertible>: Se
 
         public mutating func next() -> MutableManagedObject<PlainObject>? {
             return (self.iterator.next() as? NSManagedObject).flatMap {
-                .init($0)
+                .init(instance: $0)
             }
         }
     }

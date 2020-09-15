@@ -2,7 +2,7 @@ import Foundation
 import CoreData
 
 extension NSManagedObject {
-    subscript(primitiveKey key: String) -> Any? {
+    public subscript(primitiveValue key: String) -> Any? {
         get {
             self.primitiveValue(forKey: key)
         }
@@ -11,6 +11,14 @@ extension NSManagedObject {
             self.setPrimitiveValue(newValue, forKey: key)
             self.didChangeValue(forKey: key)
         }
+    }
+
+    public subscript(mutableSet key: String) -> NSMutableSet {
+        self.mutableSetValue(forKey: key)
+    }
+
+    public subscript(mutableOrderedSet key: String) -> NSMutableOrderedSet {
+        self.mutableOrderedSetValue(forKey: key)
     }
 }
 
