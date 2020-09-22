@@ -2,7 +2,7 @@ import Foundation
 import CoreData
 
 extension NSManagedObject {
-    subscript(primitiveValue key: String) -> Any? {
+    public subscript(primitiveValue key: String) -> Any? {
         get {
             self.primitiveValue(forKey: key)
         }
@@ -13,17 +13,17 @@ extension NSManagedObject {
         }
     }
 
-    subscript(mutableSet key: String) -> NSMutableSet {
+    public subscript(mutableSet key: String) -> NSMutableSet {
         self.mutableSetValue(forKey: key)
     }
 
-    subscript(mutableOrderedSet key: String) -> NSMutableOrderedSet {
+    public subscript(mutableOrderedSet key: String) -> NSMutableOrderedSet {
         self.mutableOrderedSetValue(forKey: key)
     }
 }
 
 extension NSManagedObject {
-    func new(relation name: String) -> NSManagedObject {
+    public func new(relation name: String) -> NSManagedObject {
         return .init(
             entity: self
                 .entity
@@ -35,7 +35,7 @@ extension NSManagedObject {
 }
 
 extension NSManagedObjectContext {
-    func new(entity name: String) -> NSManagedObject {
+    public func new(entity name: String) -> NSManagedObject {
         return .init(
             entity: self
                 .persistentStoreCoordinator.unsafelyUnwrapped
