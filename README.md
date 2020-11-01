@@ -1,12 +1,13 @@
-# HappyData
+![SWORM](logo.svg)
 
-Swift plain objects + Core Data
+# Features
 
-Note: xcode 12 is required for SPM resources support
+1) Pure Swift Objects - No more subclasses of NSManagedObject
+2) Extensible Attribute System - store any type in CoreData storage by implementing a simple protocol in type extension
+3) Strongly typed data queries
+4) Progressive migrations
 
-## Progressive migrations
-
-#### Links
+### Links
 
 1) [williamboles.me](https://williamboles.me/progressive-core-data-migration/)
 
