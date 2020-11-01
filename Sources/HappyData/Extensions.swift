@@ -4,7 +4,9 @@ import CoreData
 extension NSManagedObject {
     public subscript(primitiveValue key: String) -> Any? {
         get {
-            self.primitiveValue(forKey: key)
+            self.willAccessValue(forKey: key)
+            defer { self.didAccessValue(forKey: key) }
+            return self.primitiveValue(forKey: key)
         }
         set {
             self.willChangeValue(forKey: key)
