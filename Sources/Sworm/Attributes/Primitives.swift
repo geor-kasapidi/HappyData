@@ -1,4 +1,14 @@
-import Foundation
+import Foundation.NSData
+import Foundation.NSDate
+import Foundation.NSDecimal
+import Foundation.NSURL
+import Foundation.NSUUID
+
+public extension PrimitiveAttribute {
+    func encodePrimitiveValue() -> Self { self }
+
+    static func decode(primitiveValue: Self) throws -> Self { primitiveValue }
+}
 
 extension Bool: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
 extension Int: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }

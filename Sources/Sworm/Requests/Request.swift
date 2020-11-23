@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSFetchRequest
 
 public extension ManagedObjectConvertible {
     static var all: Request<Self> { .all }

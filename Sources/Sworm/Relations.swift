@@ -1,6 +1,3 @@
-import CoreData
-import Foundation
-
 public struct ToOneRelation<Destination: ManagedObjectConvertible> {
     let name: String
 

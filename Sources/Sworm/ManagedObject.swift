@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSManagedObject
 
 public struct ManagedObject<PlainObject: ManagedObjectConvertible> {
     unowned let instance: NSManagedObject

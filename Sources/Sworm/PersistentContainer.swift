@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSPersistentContainer
 
 public final class PersistentContainer {
     public enum Queue {

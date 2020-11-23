@@ -1,6 +1,3 @@
-import CoreData
-import Foundation
-
 public protocol ManagedObjectConvertible {
     associatedtype Relations
 

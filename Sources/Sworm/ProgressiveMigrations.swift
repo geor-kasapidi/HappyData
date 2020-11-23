@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSManagedObjectModel
 
 public enum SQLiteMigrationError: Swift.Error {
     case badStore

@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSManagedObjectContext
 
 public extension NSManagedObject {
     subscript(primitiveValue key: String) -> Any? {

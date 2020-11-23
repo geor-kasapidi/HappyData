@@ -1,5 +1,4 @@
-import CoreData
-import Foundation
+import CoreData.NSManagedObjectContext
 
 public struct PersistentWriter {
     private unowned let instance: NSManagedObjectContext

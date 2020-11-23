@@ -1,4 +1,4 @@
-import Foundation
+import Foundation.NSData
 
 public struct JSON<T: Codable>: SupportedAttributeType {
     public var value: T

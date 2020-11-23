@@ -1,5 +1,3 @@
-import Foundation
-
 public prefix func ! (
     original: Predicate
 ) -> Predicate {
