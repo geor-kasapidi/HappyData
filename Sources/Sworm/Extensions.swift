@@ -1,4 +1,21 @@
 import CoreData.NSManagedObjectContext
+import Foundation.NSBundle
+
+public extension Bundle {
+    func managedObjectModel(forVersion version: String, modelName: String) -> NSManagedObjectModel? {
+        // momd directory contains omo/mom files
+        let subdirectory = "\(modelName).momd"
+        // optimized model file
+        if let omoURL = self.url(forResource: version, withExtension: "omo", subdirectory: subdirectory) {
+            return NSManagedObjectModel(contentsOf: omoURL)
+        }
+        // standard model file
+        if let momURL = self.url(forResource: version, withExtension: "mom", subdirectory: subdirectory) {
+            return NSManagedObjectModel(contentsOf: momURL)
+        }
+        return nil
+    }
+}
 
 public extension NSManagedObject {
     subscript(primitiveValue key: String) -> Any? {
@@ -44,6 +61,28 @@ public extension NSManagedObjectContext {
                 .entitiesByName[name].unsafelyUnwrapped,
             insertInto: self
         )
+    }
+}
+
+public extension NSPersistentContainer {
+    func loadPersistentStore() throws {
+        var loadError: Swift.Error?
+        self.loadPersistentStores { _, error in
+            loadError = error
+        }
+        try loadError.flatMap { throw $0 }
+    }
+
+    func removePersistentStores() throws {
+        try self.persistentStoreCoordinator.removePersistentStores()
+    }
+}
+
+public extension NSPersistentStoreCoordinator {
+    func removePersistentStores() throws {
+        try self.persistentStores.forEach {
+            try self.remove($0)
+        }
     }
 }
 

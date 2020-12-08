@@ -1,12 +1,5 @@
 import CoreData.NSManagedObjectModel
 
-public enum SQLiteMigrationError: Swift.Error {
-    case badStore
-    case badVersion(String)
-    case noCompatibleVersionFound
-    case badMappingModel(String)
-}
-
 public struct SQLiteProgressiveMigration {
     public typealias Progress = (Int, Int) -> Void
 
@@ -35,7 +28,7 @@ public struct SQLiteProgressiveMigration {
                 guard let url = bundle.url(forResource: name, withExtension: "cdm"),
                       let mappingModel = NSMappingModel(contentsOf: url)
                 else {
-                    throw SQLiteMigrationError.badMappingModel(name)
+                    throw StoreError.badMappingModel(name)
                 }
                 self.mappingModel = mappingModel
             }
@@ -65,32 +58,26 @@ public struct SQLiteProgressiveMigration {
     let bundle: Bundle
     let steps: [Step]
 
-    public init?(
-        originalStoreURL: URL,
-        bundle: Bundle,
-        modelName: String,
-        modelVersions: [String],
-        mappingModels: [String?]
-    ) throws {
+    public init?(store: StoreInfo, bundle: Bundle) throws {
         guard let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(
             ofType: NSSQLiteStoreType,
-            at: originalStoreURL,
+            at: store.url,
             options: nil
         ) else {
             return nil
         }
 
-        let models: [NSManagedObjectModel] = try modelVersions.map { version in
-            if let model = bundle.managedObjectModel(forVersion: version, modelName: modelName) {
+        let models: [NSManagedObjectModel] = try store.modelVersions.map { version in
+            if let model = bundle.managedObjectModel(forVersion: version, modelName: store.modelName) {
                 return model
             }
-            throw SQLiteMigrationError.badVersion(version)
+            throw StoreError.badVersion(version)
         }
 
         guard let currentModelIndex = models.firstIndex(where: {
             $0.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
         }) else {
-            throw SQLiteMigrationError.noCompatibleVersionFound
+            throw StoreError.noCompatibleVersionFound
         }
 
         let modelIndicesToMigrate = models.indices.dropFirst(currentModelIndex)
@@ -99,7 +86,7 @@ public struct SQLiteProgressiveMigration {
             try Step(
                 sourceModel: models[$0],
                 destinationModel: models[$1],
-                source: mappingModels[$0].flatMap { .bundle(bundle, $0) } ?? .auto
+                source: store.mappingModels[$0].flatMap { .bundle(bundle, $0) } ?? .auto
             )
         }
 
@@ -107,7 +94,7 @@ public struct SQLiteProgressiveMigration {
             return nil
         }
 
-        self.originalStoreURL = originalStoreURL
+        self.originalStoreURL = store.url
         self.metadata = metadata
         self.currentModel = models[currentModelIndex]
         self.bundle = bundle
@@ -193,49 +180,5 @@ private extension NSPersistentStoreCoordinator {
             ofType: NSSQLiteStoreType,
             options: nil
         )
-    }
-}
-
-public extension Bundle {
-    func managedObjectModel(forVersion version: String, modelName: String) -> NSManagedObjectModel? {
-        // momd directory contains omo/mom files
-        let subdirectory = "\(modelName).momd"
-
-        // optimized model file
-        if let omoURL = self.url(
-            forResource: version,
-            withExtension: "omo",
-            subdirectory: subdirectory
-        ) {
-            return NSManagedObjectModel(contentsOf: omoURL)
-        }
-
-        // standard model file
-        if let momURL = self.url(
-            forResource: version,
-            withExtension: "mom",
-            subdirectory: subdirectory
-        ) {
-            return NSManagedObjectModel(contentsOf: momURL)
-        }
-
-        return nil
-    }
-}
-
-public extension NSPersistentContainer {
-    func prepareForManualSQLiteMigration() throws -> URL {
-        guard let storeDescription = self.persistentStoreDescriptions.first,
-              storeDescription.type == NSSQLiteStoreType,
-              let storeURL = storeDescription.url
-        else {
-            throw SQLiteMigrationError.badStore
-        }
-
-        storeDescription.shouldAddStoreAsynchronously = false
-        storeDescription.shouldInferMappingModelAutomatically = false
-        storeDescription.shouldMigrateStoreAutomatically = false
-
-        return storeURL
     }
 }

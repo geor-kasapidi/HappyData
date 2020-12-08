@@ -5,30 +5,28 @@ import XCTest
 @available(OSX 10.15, *)
 final class CRUDTests: XCTestCase {
     func testSingleEntityNoRelationsReadWrite() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
+        TestDB.withTemporaryContainer { db in
+            let book1 = Book(
+                id: .init(),
+                name: "A",
+                date: Date()
+            )
 
-        let book1 = Book(
-            id: .init(),
-            name: "A",
-            date: Date()
-        )
+            let book2 = Book(
+                id: .init(),
+                name: "B",
+                date: Date()
+            )
 
-        let book2 = Book(
-            id: .init(),
-            name: "B",
-            date: Date()
-        )
-
-        do {
             // INSERT
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
+                try db.readWrite(action: { _, writer in
                     try writer.insert(book1)
                 })
             }
             // FETCH
             do {
-                let books = try TestDB.shared.readOnly(action: { reader in
+                let books = try db.readOnly(action: { reader in
                     try reader.fetch(Book.all)
                 })
 
@@ -37,7 +35,7 @@ final class CRUDTests: XCTestCase {
             }
             // UPDATE
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
+                try db.readWrite(action: { _, writer in
                     try writer.update(Book.all) {
                         $0.encode(book2)
                     }
@@ -45,7 +43,7 @@ final class CRUDTests: XCTestCase {
             }
             // FETCH
             do {
-                let books = try TestDB.shared.readOnly(action: { reader in
+                let books = try db.readOnly(action: { reader in
                     try reader.fetch(Book.all)
                 })
 
@@ -54,49 +52,45 @@ final class CRUDTests: XCTestCase {
             }
             // DELETE
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
+                try db.readWrite(action: { _, writer in
                     try writer.delete(Book.all)
                 })
             }
             // COUNT
             do {
-                let booksCount = try TestDB.shared.readOnly(action: { reader in
+                let booksCount = try db.readOnly(action: { reader in
                     try reader.count(of: Book.all)
                 })
 
                 XCTAssert(booksCount == 0)
             }
-        } catch {
-            XCTAssert(false, error.localizedDescription)
         }
     }
 
     func testSingleEntityWithRelationsReadWrite() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
+        TestDB.withTemporaryContainer { db in
+            let book1 = Book(
+                id: .init(),
+                name: "A",
+                date: Date()
+            )
 
-        let book1 = Book(
-            id: .init(),
-            name: "A",
-            date: Date()
-        )
+            let book2 = Book(
+                id: .init(),
+                name: "B",
+                date: Date()
+            )
 
-        let book2 = Book(
-            id: .init(),
-            name: "B",
-            date: Date()
-        )
+            let cover = BookCover(
+                id: .init(),
+                imageData: .init(repeating: 0, count: 10)
+            )
 
-        let cover = BookCover(
-            id: .init(),
-            imageData: .init(repeating: 0, count: 10)
-        )
+            let foo = Foo(id: 11)
 
-        let foo = Foo(id: 11)
-
-        do {
             // INSERT
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
+                try db.readWrite(action: { _, writer in
                     try writer.insert(Book.self) {
                         $0.encode(book1)
                         $0.set(\.bookCover, value: cover)
@@ -106,7 +100,7 @@ final class CRUDTests: XCTestCase {
             }
             // FETCH
             do {
-                let booksWithCoversWithFoos = try TestDB.shared.readOnly(action: { reader in
+                let booksWithCoversWithFoos = try db.readOnly(action: { reader in
                     try reader.fetch(Book.all) {
                         (
                             try $0.decode(),
@@ -123,7 +117,7 @@ final class CRUDTests: XCTestCase {
             }
             // UPDATE
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
+                try db.readWrite(action: { _, writer in
                     try writer.update(Book.all) {
                         $0[\.bookCover]?.set(\.book, value: book2)
                         $0[\.bookCover]?.set(\.foo, object: nil)
@@ -132,7 +126,7 @@ final class CRUDTests: XCTestCase {
             }
             // FETCH
             do {
-                let booksWithCoversWithFoos = try TestDB.shared.readOnly(action: { reader in
+                let booksWithCoversWithFoos = try db.readOnly(action: { reader in
                     try reader.fetch(Book.all) {
                         (
                             try $0.decode(),
@@ -147,587 +141,524 @@ final class CRUDTests: XCTestCase {
                 XCTAssert(booksWithCoversWithFoos[0].1 == cover)
                 XCTAssert(booksWithCoversWithFoos[0].2 == nil)
             }
-        } catch {
-            XCTAssert(false, error.localizedDescription)
         }
     }
 
     func testNotUniqueInsertFail() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
+        TestDB.withTemporaryContainer { db in
+            let book = Book(
+                id: .init(),
+                name: "A",
+                date: Date()
+            )
 
-        let book = Book(
-            id: .init(),
-            name: "A",
-            date: Date()
-        )
+            var hasError: Bool = false
 
-        var hasError: Bool = false
-
-        do {
-            // INSERT (success)
             do {
-                try TestDB.shared.readWrite(action: { _, writer in
-                    try writer.insert(book)
+                // INSERT (success)
+                do {
+                    try db.readWrite(action: { _, writer in
+                        try writer.insert(book)
+                    })
+                }
+                // INSERT (fail)
+                do {
+                    try db.readWrite(action: { _, writer in
+                        try writer.insert(book)
+                    })
+                } catch {
+                    hasError = true
+                }
+            }
+
+            XCTAssert(hasError)
+        }
+
+        func testNotUniqueInsertFetch() {
+            TestDB.withTemporaryContainer { db in
+                let book = Book(
+                    id: .init(),
+                    name: "A",
+                    date: Date()
+                )
+
+                var hasError: Bool = false
+
+                // INSERT
+                do {
+                    try db.readWrite(action: { _, writer in
+                        for _ in 1 ... 10 {
+                            try writer.insert(book)
+                        }
+                    })
+                } catch {
+                    hasError = true
+                }
+
+                XCTAssert(hasError)
+
+                // FETCH
+                let books = try db.readOnly(action: { reader in
+                    try reader.fetch(Book.all)
                 })
+
+                XCTAssert(books.isEmpty)
             }
-            // INSERT (fail)
-            do {
-                try TestDB.shared.readWrite(action: { _, writer in
-                    try writer.insert(book)
+        }
+
+        func testRequestSortLimit() {
+            TestDB.withTemporaryContainer { db in
+                // INSERT
+                try db.readWrite(action: { _, writer in
+                    for i in (1 ... 10).reversed() {
+                        try writer.insert(
+                            Book(
+                                id: .init(),
+                                name: "\(i)",
+                                date: i % 2 == 0 ? Date.distantPast : Date.distantFuture
+                            )
+                        )
+                    }
                 })
-            }
-        } catch {
-            hasError = true
-        }
 
-        XCTAssert(hasError)
-    }
-
-    func testNotUniqueInsertFetch() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
-
-        let book = Book(
-            id: .init(),
-            name: "A",
-            date: Date()
-        )
-
-        var hasError: Bool = false
-
-        // INSERT
-        do {
-            try TestDB.shared.readWrite(action: { _, writer in
-                for _ in 1 ... 10 {
-                    try writer.insert(book)
-                }
-            })
-        } catch {
-            hasError = true
-        }
-
-        XCTAssert(hasError)
-
-        // FETCH
-        do {
-            let books = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(Book.all)
-            })
-
-            XCTAssert(books.isEmpty)
-        } catch {}
-    }
-
-    func testRequestSortLimit() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
-
-        // INSERT
-        do {
-            try TestDB.shared.readWrite(action: { _, writer in
-                for i in (1 ... 10).reversed() {
-                    try writer.insert(
-                        Book(
-                            id: .init(),
-                            name: "\(i)",
-                            date: i % 2 == 0 ? Date.distantPast : Date.distantFuture
-                        )
+                // FETCH
+                let bookNames = try db.readOnly(action: { reader in
+                    try reader.fetch(
+                        Book
+                            .all
+                            .sort(asc: \.date)
+                            .sort(asc: \.name)
+                            .limit(8)
+                            .offset(1),
+                        attribute: \.name
                     )
-                }
-            })
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
+                })
 
-        // FETCH
-        do {
-            let bookNames = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(
-                    Book
-                        .all
-                        .sort(asc: \.date)
-                        .sort(asc: \.name)
-                        .limit(8)
-                        .offset(1),
-                    attribute: \.name
-                )
-            })
-
-            XCTAssert(bookNames == ["2", "4", "6", "8", "1", "3", "5", "7"])
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testRequestPredicate() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
-
-        // INSERT
-        do {
-            try TestDB.shared.readWrite(action: { _, writer in
-                for i in (1 ... 10).reversed() {
-                    try writer.insert(
-                        Book(
-                            id: i % 2 == 0 ? .init() : nil,
-                            name: "\(i)",
-                            date: i % 2 == 0 ? Date.distantPast : Date.distantFuture
-                        )
-                    )
-                }
-            })
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        // FETCH
-        do {
-            let bookWithoutIDs = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(
-                    Book
-                        .all
-                        .where(\Book.id == nil)
-                        .sort(asc: \.name),
-                    attribute: \.name
-                )
-            })
-
-            XCTAssert(bookWithoutIDs == ["1", "3", "5", "7", "9"])
-
-            let bookWithIDs = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(
-                    Book
-                        .all
-                        .where(\Book.id != nil)
-                        .sort(asc: \.name),
-                    attribute: \.name
-                )
-            })
-
-            XCTAssert(bookWithIDs == ["10", "2", "4", "6", "8"])
-
-            let bookWithFutureDates = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(
-                    Book
-                        .all
-                        .where(\Book.date > Date())
-                        .sort(asc: \.name),
-                    attribute: \.name
-                )
-            })
-
-            XCTAssert(bookWithFutureDates == ["1", "3", "5", "7", "9"])
-
-            let bookWithFutureDatesAndExcludedIDs = try TestDB.shared.readOnly(action: { reader in
-                try reader.fetch(
-                    Book
-                        .all
-                        .where(\Book.date > Date() && !(\Book.name === ["3", "5"]))
-                        .sort(asc: \.name),
-                    attribute: \.name
-                )
-            })
-
-            XCTAssert(bookWithFutureDatesAndExcludedIDs == ["1", "7", "9"])
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testAttributeTypes() {
-        let testCases: [FullHouse] = [
-            FullHouse(
-                x1: true,
-                x2: 10,
-                x3: 20,
-                x4: 30,
-                x5: 10,
-                x6: 20,
-                x7: Date(),
-                x8: "foo",
-                x9: .init(.init(id: 10, name: "bar")),
-                x10: URL(string: "google.com"),
-                x11: .init(),
-                x12: 1000,
-                x13: .rty
-            ),
-            FullHouse(),
-            FullHouse(
-                x2: 10,
-                x4: 30,
-                x6: 20,
-                x8: "foo",
-                x10: URL(string: "google.com"),
-                x12: 1000
-            ),
-            FullHouse(
-                x1: true,
-                x3: 20,
-                x5: 10,
-                x7: Date(),
-                x9: .init(.init(id: 10, name: "bar")),
-                x11: .init(),
-                x13: .qwe
-            ),
-        ]
-
-        testCases.forEach { x in
-            // INSERT
-            do {
-                try TestDB.shared.readWrite { _, writer in
-                    try writer.delete(FullHouse.all)
-                    try writer.insert(x)
-                }
-            } catch {
-                XCTFail(error.localizedDescription)
+                XCTAssert(bookNames == ["2", "4", "6", "8", "1", "3", "5", "7"])
             }
+        }
 
-            // FETCH
-            do {
-                let result = try TestDB.shared.readOnly { reader in
-                    try reader.fetch(FullHouse.all)
+        func testRequestPredicate() {
+            TestDB.withTemporaryContainer { db in
+                // INSERT
+                try db.readWrite(action: { _, writer in
+                    for i in (1 ... 10).reversed() {
+                        try writer.insert(
+                            Book(
+                                id: i % 2 == 0 ? .init() : nil,
+                                name: "\(i)",
+                                date: i % 2 == 0 ? Date.distantPast : Date.distantFuture
+                            )
+                        )
+                    }
+                })
+
+                // FETCH
+                let bookWithoutIDs = try db.readOnly(action: { reader in
+                    try reader.fetch(
+                        Book
+                            .all
+                            .where(\Book.id == nil)
+                            .sort(asc: \.name),
+                        attribute: \.name
+                    )
+                })
+
+                XCTAssert(bookWithoutIDs == ["1", "3", "5", "7", "9"])
+
+                let bookWithIDs = try db.readOnly(action: { reader in
+                    try reader.fetch(
+                        Book
+                            .all
+                            .where(\Book.id != nil)
+                            .sort(asc: \.name),
+                        attribute: \.name
+                    )
+                })
+
+                XCTAssert(bookWithIDs == ["10", "2", "4", "6", "8"])
+
+                let bookWithFutureDates = try db.readOnly(action: { reader in
+                    try reader.fetch(
+                        Book
+                            .all
+                            .where(\Book.date > Date())
+                            .sort(asc: \.name),
+                        attribute: \.name
+                    )
+                })
+
+                XCTAssert(bookWithFutureDates == ["1", "3", "5", "7", "9"])
+
+                let bookWithFutureDatesAndExcludedIDs = try db.readOnly(action: { reader in
+                    try reader.fetch(
+                        Book
+                            .all
+                            .where(\Book.date > Date() && !(\Book.name === ["3", "5"]))
+                            .sort(asc: \.name),
+                        attribute: \.name
+                    )
+                })
+
+                XCTAssert(bookWithFutureDatesAndExcludedIDs == ["1", "7", "9"])
+            }
+        }
+
+        func testAttributeTypes() {
+            TestDB.withTemporaryContainer { db in
+                let testCases: [FullHouse] = [
+                    FullHouse(
+                        x1: true,
+                        x2: 10,
+                        x3: 20,
+                        x4: 30,
+                        x5: 10,
+                        x6: 20,
+                        x7: Date(),
+                        x8: "foo",
+                        x9: .init(.init(id: 10, name: "bar")),
+                        x10: URL(string: "google.com"),
+                        x11: .init(),
+                        x12: 1000,
+                        x13: .rty
+                    ),
+                    FullHouse(),
+                    FullHouse(
+                        x2: 10,
+                        x4: 30,
+                        x6: 20,
+                        x8: "foo",
+                        x10: URL(string: "google.com"),
+                        x12: 1000
+                    ),
+                    FullHouse(
+                        x1: true,
+                        x3: 20,
+                        x5: 10,
+                        x7: Date(),
+                        x9: .init(.init(id: 10, name: "bar")),
+                        x11: .init(),
+                        x13: .qwe
+                    ),
+                ]
+
+                try testCases.forEach { x in
+                    // INSERT
+                    try db.readWrite { _, writer in
+                        try writer.delete(FullHouse.all)
+                        try writer.insert(x)
+                    }
+
+                    // FETCH
+                    let result = try db.readOnly { reader in
+                        try reader.fetch(FullHouse.all)
+                    }
+
+                    XCTAssert(result.count == 1)
+                    XCTAssert(result[0] == x)
+                }
+            }
+        }
+
+        func testCustomAttributeRequest() {
+            TestDB.withTemporaryContainer { db in
+                let xx: [FullHouse] = [
+                    FullHouse(
+                        x2: 11,
+                        x13: .rty
+                    ),
+                    FullHouse(
+                        x2: 10,
+                        x13: .qwe
+                    ),
+                ]
+
+                // INSERT
+                try db.readWrite { _, writer in
+                    try writer.batchDelete(FullHouse.all)
+                    try xx.forEach {
+                        try writer.insert($0)
+                    }
+                }
+
+                // FETCH
+                let result = try db.readOnly { reader in
+                    try reader.fetch(FullHouse.all.where(\FullHouse.x13 == .qwe), attribute: \.x2)
                 }
 
                 XCTAssert(result.count == 1)
-                XCTAssert(result[0] == x)
-            } catch {
-                XCTFail(error.localizedDescription)
+                XCTAssert(result[0] == 10)
             }
         }
-    }
 
-    func testCustomAttributeRequest() {
-        let xx: [FullHouse] = [
-            FullHouse(
-                x2: 11,
-                x13: .rty
-            ),
-            FullHouse(
-                x2: 10,
-                x13: .qwe
-            ),
-        ]
+        func testTextPredicates() {
+            TestDB.withTemporaryContainer { db in
+                let xx: [FullHouse] = [
+                    FullHouse(
+                        x8: "AbCd"
+                    ),
+                    FullHouse(
+                        x8: "aBcD"
+                    ),
+                ]
 
-        // INSERT
-        do {
-            try TestDB.shared.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try xx.forEach {
-                    try writer.insert($0)
+                // INSERT
+                try db.readWrite { _, writer in
+                    try writer.batchDelete(FullHouse.all)
+                    try xx.forEach {
+                        try writer.insert($0)
+                    }
                 }
-            }
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
 
-        // FETCH
-        do {
-            let result = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(\FullHouse.x13 == .qwe), attribute: \.x2)
-            }
-
-            XCTAssert(result.count == 1)
-            XCTAssert(result[0] == 10)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testTextPredicates() {
-        let xx: [FullHouse] = [
-            FullHouse(
-                x8: "AbCd"
-            ),
-            FullHouse(
-                x8: "aBcD"
-            ),
-        ]
-
-        // INSERT
-        do {
-            try TestDB.shared.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try xx.forEach {
-                    try writer.insert($0)
-                }
-            }
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        // FETCH
-        do {
-            let result: [String?] = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b")), attribute: \.x8)
-            }
-
-            XCTAssert(result.count == 2)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        // FETCH
-        do {
-            let result: [String?] = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b", caseInsensitive: false)), attribute: \.x8)
-            }
-
-            XCTAssert(result.count == 1)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        // FETCH
-        do {
-            let result: [String?] = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(Query.beginsWith(\FullHouse.x8, "ab")), attribute: \.x8)
-            }
-
-            XCTAssert(result.count == 2)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-
-        // FETCH
-        do {
-            let result: [String?] = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(Query.endsWith(\FullHouse.x8, "cd")), attribute: \.x8)
-            }
-
-            XCTAssert(result.count == 2)
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testMultiThreadReadWrite() {
-        XCTAssertNoThrow(try TestDB.shared.readWrite { _, writer in
-            try writer.batchDelete(FullHouse.all)
-        })
-
-        let group = DispatchGroup()
-
-        (1 ... 10).forEach { (x: Int16) in
-            group.enter()
-            DispatchQueue.global().async {
+                // FETCH
                 do {
-                    try TestDB.shared.readWrite { _, writer in
-                        try writer.insert(FullHouse(x2: x))
+                    let result: [String?] = try db.readOnly { reader in
+                        try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b")), attribute: \.x8)
                     }
-                } catch {}
-                group.leave()
-            }
-        }
 
-        group.wait()
+                    XCTAssert(result.count == 2)
+                }
 
-        do {
-            let items = try TestDB.shared.readOnly { reader in
-                try reader.fetch(FullHouse.all.sort(asc: \.x2), attribute: \.x2)
-            }
+                // FETCH
+                do {
+                    let result: [String?] = try db.readOnly { reader in
+                        try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b", caseInsensitive: false)), attribute: \.x8)
+                    }
 
-            XCTAssert(items == Array(1 ... 10))
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
+                    XCTAssert(result.count == 1)
+                }
 
-    func testEncodeDecodeSingleAttribute() {
-        do {
-            try TestDB.shared.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try writer.insert(FullHouse())
-            }
+                // FETCH
+                do {
+                    let result: [String?] = try db.readOnly { reader in
+                        try reader.fetch(FullHouse.all.where(Query.beginsWith(\FullHouse.x8, "ab")), attribute: \.x8)
+                    }
 
-            let a = try TestDB.shared.readOnly { reader in
-                try reader.fetchOne(FullHouse.all, attribute: \.x2)
-            }
+                    XCTAssert(result.count == 2)
+                }
 
-            XCTAssert(a == nil)
+                // FETCH
+                do {
+                    let result: [String?] = try db.readOnly { reader in
+                        try reader.fetch(FullHouse.all.where(Query.endsWith(\FullHouse.x8, "cd")), attribute: \.x8)
+                    }
 
-            try TestDB.shared.readWrite { _, writer in
-                try writer.update(FullHouse.all) {
-                    $0.encode(attribute: \.x2, 16)
+                    XCTAssert(result.count == 2)
                 }
             }
-
-            let b = try TestDB.shared.readOnly { reader in
-                try reader.fetchOne(FullHouse.all) {
-                    try $0.decode(attribute: \.x2)
-                }
-            }
-
-            XCTAssert(b == 16)
-        } catch {
-            XCTFail(error.localizedDescription)
         }
-    }
 
-    func testToManyRelations() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
+        func testMultiThreadReadWrite() {
+            TestDB.withTemporaryContainer { db in
 
-        do {
-            let authorID = UUID()
+                let group = DispatchGroup()
 
-            do {
-                try TestDB.shared.readWrite { _, writer in
-                    try writer.insert(Author.self) {
-                        $0.encode(
-                            .init(
-                                id: authorID,
-                                name: "pushkin"
+                (1 ... 10).forEach { (x: Int16) in
+                    group.enter()
+                    DispatchQueue.global().async {
+                        do {
+                            try db.readWrite { _, writer in
+                                try writer.insert(FullHouse(x2: x))
+                            }
+                        } catch {}
+                        group.leave()
+                    }
+                }
+
+                group.wait()
+
+                let items = try db.readOnly { reader in
+                    try reader.fetch(FullHouse.all.sort(asc: \.x2), attribute: \.x2)
+                }
+
+                XCTAssert(items == Array(1 ... 10))
+            }
+        }
+
+        func testEncodeDecodeSingleAttribute() {
+            TestDB.withTemporaryContainer { db in
+                try db.readWrite { _, writer in
+                    try writer.batchDelete(FullHouse.all)
+                    try writer.insert(FullHouse())
+                }
+
+                let a = try db.readOnly { reader in
+                    try reader.fetchOne(FullHouse.all, attribute: \.x2)
+                }
+
+                XCTAssert(a == nil)
+
+                try db.readWrite { _, writer in
+                    try writer.update(FullHouse.all) {
+                        $0.encode(attribute: \.x2, 16)
+                    }
+                }
+
+                let b = try db.readOnly { reader in
+                    try reader.fetchOne(FullHouse.all) {
+                        try $0.decode(attribute: \.x2)
+                    }
+                }
+
+                XCTAssert(b == 16)
+            }
+        }
+
+        func testToManyRelations() {
+            TestDB.withTemporaryContainer { db in
+                let authorID = UUID()
+
+                do {
+                    try db.readWrite { _, writer in
+                        try writer.insert(Author.self) {
+                            $0.encode(
+                                .init(
+                                    id: authorID,
+                                    name: "pushkin"
+                                )
                             )
-                        )
-                        $0[\.books].add(Book(name: "1"))
-                        $0[\.books].add(Book(name: "2"))
-                        $0[\.books].add(Book(name: "3"))
-                    }
-                }
-            }
-
-            do {
-                let bookNames = try TestDB.shared.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
-                    }
-                }
-
-                XCTAssert(bookNames == ["1", "2", "3"])
-            }
-
-            do {
-                try TestDB.shared.readWrite { _, writer in
-                    try writer.update(Author.all) { mo in
-                        try mo[\.books].filter {
-                            try $0.decode(attribute: \.name) == "2"
-                        }.forEach {
-                            mo[\.books].remove($0)
-                            writer.delete($0)
+                            $0[\.books].add(Book(name: "1"))
+                            $0[\.books].add(Book(name: "2"))
+                            $0[\.books].add(Book(name: "3"))
                         }
                     }
                 }
-            }
 
-            do {
-                let bookNames = try TestDB.shared.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
+                do {
+                    let bookNames = try db.readOnly { reader in
+                        try reader.fetchOne(Author.all) {
+                            try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
+                        }
+                    }
+
+                    XCTAssert(bookNames == ["1", "2", "3"])
+                }
+
+                do {
+                    try db.readWrite { _, writer in
+                        try writer.update(Author.all) { mo in
+                            try mo[\.books].filter {
+                                try $0.decode(attribute: \.name) == "2"
+                            }.forEach {
+                                mo[\.books].remove($0)
+                                writer.delete($0)
+                            }
+                        }
                     }
                 }
 
-                XCTAssert(bookNames == ["1", "3"])
+                do {
+                    let bookNames = try db.readOnly { reader in
+                        try reader.fetchOne(Author.all) {
+                            try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
+                        }
+                    }
 
-                let allBookNames = try TestDB.shared.readOnly { reader in
-                    try reader.fetch(Book.all, attribute: \.name).sorted()
+                    XCTAssert(bookNames == ["1", "3"])
+
+                    let allBookNames = try db.readOnly { reader in
+                        try reader.fetch(Book.all, attribute: \.name).sorted()
+                    }
+
+                    XCTAssert(allBookNames == ["1", "3"])
+                }
+            }
+        }
+
+        func testReferenceSemantic() {
+            TestDB.withTemporaryContainer { db in
+                let bookRef = BookRef()
+                bookRef.name = "xxx"
+
+                try db.readWrite { _, writer in
+                    try writer.insert(bookRef)
                 }
 
-                XCTAssert(allBookNames == ["1", "3"])
+                let fetchedRef = try db.readOnly { reader in
+                    try reader.fetchOne(BookRef.all)
+                }
+
+                XCTAssert(fetchedRef == bookRef)
+
+                let fetchedRefName = try db.readOnly { reader in
+                    try reader.fetchOne(BookRef.all, attribute: \.name)
+                }
+
+                XCTAssert(fetchedRefName == "xxx")
             }
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testReferenceSemantic() {
-        do {
-            let bookRef = BookRef()
-            bookRef.name = "xxx"
-
-            try TestDB.shared.readWrite { _, writer in
-                try writer.insert(bookRef)
-            }
-
-            let fetchedRef = try TestDB.shared.readOnly { reader in
-                try reader.fetchOne(BookRef.all)
-            }
-
-            XCTAssert(fetchedRef == bookRef)
-        } catch {
-            XCTFail(error.localizedDescription)
         }
 
-        do {
-            let fetchedRefName = try TestDB.shared.readOnly { reader in
-                try reader.fetchOne(BookRef.all, attribute: \.name)
-            }
+        func testOrderedRelations() {
+            TestDB.withTemporaryContainer { db in
+                let authorID = UUID()
 
-            XCTAssert(fetchedRefName == "xxx")
-        } catch {
-            XCTFail(error.localizedDescription)
-        }
-    }
-
-    func testOrderedRelations() {
-        XCTAssertNoThrow(try TestDB.cleanUp())
-
-        do {
-            let authorID = UUID()
-
-            do {
-                try TestDB.shared.readWrite { _, writer in
-                    try writer.insert(Author.self) {
-                        $0.encode(
-                            .init(
-                                id: authorID,
-                                name: "pushkin"
+                do {
+                    try db.readWrite { _, writer in
+                        try writer.insert(Author.self) {
+                            $0.encode(
+                                .init(
+                                    id: authorID,
+                                    name: "pushkin"
+                                )
                             )
-                        )
-                        $0[\.orderedBooks].add(Book(name: "4"))
-                        $0[\.orderedBooks].add(Book(name: "3"))
-                        $0[\.orderedBooks].add(Book(name: "2"))
-                    }
-                }
-            }
-
-            do {
-                let bookNames = try TestDB.shared.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.orderedBooks].map { try $0.decode(attribute: \.name) }
-                    }
-                }
-
-                XCTAssert(bookNames == ["4", "3", "2"])
-            }
-
-            let coverID = UUID()
-
-            do {
-                try TestDB.shared.readWrite { _, writer in
-                    try writer.update(Author.all) { mo in
-                        for var x in mo[\.orderedBooks] {
-                            x.set(\.bookCover, value: .init(id: coverID, imageData: .init(repeating: 0, count: 10)))
-                        }
-
-                        try mo[\.orderedBooks].filter {
-                            try $0.decode(attribute: \.name) == "3"
-                        }.forEach {
-                            mo[\.orderedBooks].remove($0)
-                            writer.delete($0)
-                        }
-                    }
-                }
-            }
-
-            do {
-                let books = try TestDB.shared.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.orderedBooks].map {
-                            (
-                                try $0.decode(),
-                                try ($0[\.bookCover]?.decode(attribute: \.id))
-                            )
+                            $0[\.orderedBooks].add(Book(name: "4"))
+                            $0[\.orderedBooks].add(Book(name: "3"))
+                            $0[\.orderedBooks].add(Book(name: "2"))
                         }
                     }
                 }
 
-                XCTAssert(books?.map(\.0.name) == ["4", "2"])
-                XCTAssert(books?.map(\.1) == [coverID, coverID])
+                do {
+                    let bookNames = try db.readOnly { reader in
+                        try reader.fetchOne(Author.all) {
+                            try $0[\.orderedBooks].map { try $0.decode(attribute: \.name) }
+                        }
+                    }
 
-                let allBookNames = try TestDB.shared.readOnly { reader in
-                    try reader.fetch(Book.all, attribute: \.name).sorted()
+                    XCTAssert(bookNames == ["4", "3", "2"])
                 }
 
-                XCTAssert(allBookNames == ["2", "4"])
+                let coverID = UUID()
+
+                do {
+                    try db.readWrite { _, writer in
+                        try writer.update(Author.all) { mo in
+                            for var x in mo[\.orderedBooks] {
+                                x.set(\.bookCover, value: .init(id: coverID, imageData: .init(repeating: 0, count: 10)))
+                            }
+
+                            try mo[\.orderedBooks].filter {
+                                try $0.decode(attribute: \.name) == "3"
+                            }.forEach {
+                                mo[\.orderedBooks].remove($0)
+                                writer.delete($0)
+                            }
+                        }
+                    }
+                }
+
+                do {
+                    let books = try db.readOnly { reader in
+                        try reader.fetchOne(Author.all) {
+                            try $0[\.orderedBooks].map {
+                                (
+                                    try $0.decode(),
+                                    try ($0[\.bookCover]?.decode(attribute: \.id))
+                                )
+                            }
+                        }
+                    }
+
+                    XCTAssert(books?.map(\.0.name) == ["4", "2"])
+                    XCTAssert(books?.map(\.1) == [coverID, coverID])
+
+                    let allBookNames = try db.readOnly { reader in
+                        try reader.fetch(Book.all, attribute: \.name).sorted()
+                    }
+
+                    XCTAssert(allBookNames == ["2", "4"])
+                }
             }
-        } catch {
-            XCTFail(error.localizedDescription)
         }
     }
 }

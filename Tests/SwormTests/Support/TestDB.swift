@@ -1,40 +1,27 @@
 import CoreData
 import Foundation
 import Sworm
-
-extension NSPersistentContainer {
-    static func dropFiles() {
-        try? FileManager.default.removeItem(at: self.defaultDirectoryURL())
-    }
-}
+import XCTest
 
 enum TestDB {
-    static let shared = PersistentContainer(
-        Self.makePersistentContainer(name: "DataModel")
+    private static let info = StoreInfo(
+        name: "DataModel",
+        url: NSPersistentContainer.defaultDirectoryURL(),
+        modelName: "DataModel",
+        modelVersions: ["DataModel"],
+        mappingModels: []
     )
 
-    @available(OSX 10.15, *)
-    static func cleanUp() throws {
-        try self.shared.readWrite { _, writer in
-            try writer.batchDelete(Foo.all)
-            try writer.batchDelete(BookCover.all)
-            try writer.batchDelete(Book.all)
-            try writer.batchDelete(Author.all)
+    static func withTemporaryContainer(_ action: (PersistentContainer) throws -> Void) {
+        do {
+            try TestTool.withTemporary(store: self.info) { testStore in
+                let container = try NSPersistentContainer(store: testStore, bundle: .module)
+                try container.loadPersistentStore()
+                try action(.init(container))
+                try container.removePersistentStores()
+            }
+        } catch {
+            XCTFail(error.localizedDescription)
         }
-    }
-
-    private static func makePersistentContainer<T: NSPersistentContainer>(name: String) -> T {
-        T.dropFiles()
-
-        Thread.sleep(forTimeInterval: 1)
-
-        let instance = T(
-            name: name,
-            managedObjectModel: Bundle.module.managedObjectModel(forVersion: name, modelName: name).unsafelyUnwrapped
-        )
-
-        instance.loadPersistentStores { _, _ in }
-
-        return instance
     }
 }
