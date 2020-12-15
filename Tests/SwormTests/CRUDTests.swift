@@ -4,6 +4,28 @@ import XCTest
 
 @available(OSX 10.15, *)
 final class CRUDTests: XCTestCase {
+    func testIsNotReady() {
+        do {
+            try TestTool.withTemporary(store: TestDB.info) { testStore in
+                let container = try NSPersistentContainer(store: testStore, bundle: .module)
+                let pc = PersistentContainer(container, isReady: { false })
+                do {
+                    try pc.readWrite { _, writer in
+                        try writer.insert(Book(
+                            id: .init(),
+                            name: "A",
+                            date: Date()
+                        ))
+                    }
+                } catch {
+                    XCTAssert(error is PersistentContainer.Error)
+                }
+            }
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
+
     func testSingleEntityNoRelationsReadWrite() {
         TestDB.withTemporaryContainer { db in
             let book1 = Book(

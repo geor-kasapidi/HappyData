@@ -1,6 +1,10 @@
 import CoreData.NSPersistentContainer
 
 public final class PersistentContainer {
+    public enum Error: Swift.Error {
+        case notReady
+    }
+
     public enum Queue {
         case `private`
         case main
@@ -9,11 +13,16 @@ public final class PersistentContainer {
 
     private let instance: NSPersistentContainer
 
-    public init(_ instance: NSPersistentContainer) {
+    private let isReady: () -> Bool
+
+    public init(_ instance: NSPersistentContainer, isReady: @escaping () -> Bool = { true }) {
         self.instance = instance
+        self.isReady = isReady
     }
 
     private func perform<T>(on queue: Queue, _ action: (NSManagedObjectContext) throws -> T) throws -> T {
+        guard self.isReady() else { throw Error.notReady }
+
         switch queue {
         case .main,
              .automatic where Thread.isMainThread:
