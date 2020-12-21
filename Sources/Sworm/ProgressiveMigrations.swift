@@ -1,9 +1,9 @@
 import CoreData.NSManagedObjectModel
 
-public struct SQLiteProgressiveMigration {
+public final class SQLiteProgressiveMigration {
     public typealias Progress = (Int, Int) -> Void
 
-    struct Step {
+    final class Step {
         enum Source {
             case auto
             case bundle(Bundle, String)

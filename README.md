@@ -14,3 +14,7 @@
 2) [objc.io](https://www.objc.io/issues/4-core-data/core-data-migration/#progressive-migrations)
 
 3) [kean.blog](https://kean.blog/post/core-data-progressive-migrations)
+
+### SwiftFormat
+
+`swiftformat --disable redundantSelf,trailingClosures --swiftversion 5.3 .`
