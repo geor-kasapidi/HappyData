@@ -1,10 +1,6 @@
 import CoreData.NSPersistentContainer
 
 public final class PersistentContainer {
-    public enum Error: Swift.Error {
-        case notReady
-    }
-
     public enum Queue {
         case `private`
         case main
@@ -21,7 +17,7 @@ public final class PersistentContainer {
     }
 
     private func perform<T>(on queue: Queue, _ action: (NSManagedObjectContext) throws -> T) throws -> T {
-        guard self.isReady() else { throw Error.notReady }
+        guard self.isReady() else { throw ActionError.actionsProhibited }
 
         switch queue {
         case .main,
@@ -39,7 +35,7 @@ public final class PersistentContainer {
         action: @escaping (PersistentReader) throws -> T
     ) throws -> T {
         try self.perform(on: queue) { context in
-            try context.execute {
+            try context.executeAction {
                 try action(.init(context))
             }
         }
@@ -51,7 +47,7 @@ public final class PersistentContainer {
         action: @escaping (PersistentReader, PersistentWriter) throws -> T
     ) throws -> T {
         try self.perform(on: queue) { context in
-            try context.save {
+            try context.saveAction {
                 try action(.init(context), .init(context))
             }
         }

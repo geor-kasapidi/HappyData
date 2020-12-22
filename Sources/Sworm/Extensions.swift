@@ -86,9 +86,9 @@ public extension NSPersistentStoreCoordinator {
     }
 }
 
-extension NSManagedObjectContext {
-    func save<T>(_ action: @escaping () throws -> T) throws -> T {
-        try self.execute {
+public extension NSManagedObjectContext {
+    func saveAction<T>(_ action: @escaping () throws -> T) throws -> T {
+        try self.executeAction {
             let result = try action()
             if self.hasChanges {
                 try self.save()
@@ -97,7 +97,7 @@ extension NSManagedObjectContext {
         }
     }
 
-    func execute<T>(_ action: @escaping () throws -> T) throws -> T {
+    func executeAction<T>(_ action: @escaping () throws -> T) throws -> T {
         var result: Result<T, Error>?
 
         self.performAndWait {
@@ -115,7 +115,7 @@ extension NSManagedObjectContext {
         case let .failure(error):
             throw error
         case .none:
-            fatalError()
+            throw ActionError.actionWasNotPerformed
         }
     }
 }

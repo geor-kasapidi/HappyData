@@ -1,12 +1,6 @@
 import CoreData.NSPersistentContainer
 import Foundation.NSURL
 
-public enum StoreError: Swift.Error {
-    case badVersion(String)
-    case noCompatibleVersionFound
-    case badMappingModel(String)
-}
-
 public struct StoreInfo {
     public init(name: String, url: URL, modelName: String, modelVersions: [String], mappingModels: [String?]) {
         assert(!(modelVersions.count - mappingModels.count > 1))

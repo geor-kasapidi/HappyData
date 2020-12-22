@@ -1,3 +1,4 @@
+import CoreData
 import Foundation
 import Sworm
 import XCTest
@@ -18,7 +19,7 @@ final class CRUDTests: XCTestCase {
                         ))
                     }
                 } catch {
-                    XCTAssert(error is PersistentContainer.Error)
+                    XCTAssert(error is ActionError)
                 }
             }
         } catch {
