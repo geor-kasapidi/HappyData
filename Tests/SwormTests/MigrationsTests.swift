@@ -8,7 +8,7 @@ final class MigrationsTests: XCTestCase {
     func testProgressiveMigrations() {
         let bundle = Bundle.module
 
-        let storeInfo = StoreInfo(
+        let storeInfo = SQLiteStoreDescription(
             name: "MigratableStore",
             url: NSPersistentContainer.defaultDirectoryURL(), // not important here
             modelName: "MigratableDataModel",

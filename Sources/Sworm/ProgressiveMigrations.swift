@@ -28,7 +28,7 @@ public final class SQLiteProgressiveMigration {
                 guard let url = bundle.url(forResource: name, withExtension: "cdm"),
                       let mappingModel = NSMappingModel(contentsOf: url)
                 else {
-                    throw StoreError.badMappingModel(name)
+                    throw DBError.badMappingModel(name)
                 }
                 self.mappingModel = mappingModel
             }
@@ -58,7 +58,7 @@ public final class SQLiteProgressiveMigration {
     let bundle: Bundle
     let steps: [Step]
 
-    public init?(store: StoreInfo, bundle: Bundle) throws {
+    public init?(store: SQLiteStoreDescription, bundle: Bundle) throws {
         guard let metadata = try? NSPersistentStoreCoordinator.metadataForPersistentStore(
             ofType: NSSQLiteStoreType,
             at: store.url,
@@ -71,13 +71,13 @@ public final class SQLiteProgressiveMigration {
             if let model = bundle.managedObjectModel(forVersion: version, modelName: store.modelName) {
                 return model
             }
-            throw StoreError.badVersion(version)
+            throw DBError.badModelVersion(version)
         }
 
         guard let currentModelIndex = models.firstIndex(where: {
             $0.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
         }) else {
-            throw StoreError.noCompatibleVersionFound
+            throw DBError.noCompatibleModelVersionFound
         }
 
         let modelIndicesToMigrate = models.indices.dropFirst(currentModelIndex)
@@ -146,39 +146,5 @@ public final class SQLiteProgressiveMigration {
         if currentStoreURL != self.originalStoreURL {
             try storeCoordinator.destroySQLiteStore(at: currentStoreURL)
         }
-    }
-}
-
-private extension NSPersistentStoreCoordinator {
-    /// https://developer.apple.com/library/archive/qa/qa1809/_index.html
-    /// https://sqlite.org/wal.html
-    func checkpointWAL(at url: URL) throws {
-        try self.remove(try self.addPersistentStore(
-            ofType: NSSQLiteStoreType,
-            configurationName: nil,
-            at: url,
-            options: [NSSQLitePragmasOption: ["journal_mode": "DELETE"]]
-        ))
-    }
-
-    func replaceSQLiteStore(
-        at destinationURL: URL,
-        with sourceURL: URL
-    ) throws {
-        try self.replacePersistentStore(
-            at: destinationURL,
-            destinationOptions: nil,
-            withPersistentStoreFrom: sourceURL,
-            sourceOptions: nil,
-            ofType: NSSQLiteStoreType
-        )
-    }
-
-    func destroySQLiteStore(at url: URL) throws {
-        try self.destroyPersistentStore(
-            at: url,
-            ofType: NSSQLiteStoreType,
-            options: nil
-        )
     }
 }

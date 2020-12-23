@@ -4,7 +4,7 @@ import Sworm
 import XCTest
 
 enum TestDB {
-    static let info = StoreInfo(
+    static let info = SQLiteStoreDescription(
         name: "DataModel",
         url: NSPersistentContainer.defaultDirectoryURL(),
         modelName: "DataModel",

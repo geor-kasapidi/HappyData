@@ -17,7 +17,7 @@ public final class PersistentContainer {
     }
 
     private func perform<T>(on queue: Queue, _ action: (NSManagedObjectContext) throws -> T) throws -> T {
-        guard self.isReady() else { throw ActionError.actionsProhibited }
+        guard self.isReady() else { throw DBError.actionsProhibited }
 
         switch queue {
         case .main,
@@ -35,7 +35,7 @@ public final class PersistentContainer {
         action: @escaping (PersistentReader) throws -> T
     ) throws -> T {
         try self.perform(on: queue) { context in
-            try context.executeAction {
+            try context.execute {
                 try action(.init(context))
             }
         }
@@ -47,7 +47,7 @@ public final class PersistentContainer {
         action: @escaping (PersistentReader, PersistentWriter) throws -> T
     ) throws -> T {
         try self.perform(on: queue) { context in
-            try context.saveAction {
+            try context.save {
                 try action(.init(context), .init(context))
             }
         }

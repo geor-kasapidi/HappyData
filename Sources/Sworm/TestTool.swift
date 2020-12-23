@@ -2,12 +2,12 @@ import CoreData.NSPersistentContainer
 
 public enum TestTool {
     public enum MigrationTestError: Swift.Error {
-        case invalidStepCount(Int?, expected: Int?, store: StoreInfo)
+        case invalidStepCount(Int?, expected: Int?, store: SQLiteStoreDescription)
     }
 
     public typealias TestAction = (NSPersistentContainer) -> Void
 
-    public static func testMigrationStepByStep(store: StoreInfo, bundle: Bundle, actions: [Int: TestAction]) throws {
+    public static func testMigrationStepByStep(store: SQLiteStoreDescription, bundle: Bundle, actions: [Int: TestAction]) throws {
         try self.withTemporary(store: store) { testStore in
             try store.modelVersions.indices.forEach { index in
                 try self.performTestAction(store: testStore.with(maxVersion: index), bundle: bundle, expectedStepCount: index > 0 ? 1 : nil) { persistentContainer in
@@ -17,7 +17,7 @@ public enum TestTool {
         }
     }
 
-    public static func testMigration(store: StoreInfo, bundle: Bundle, preAction: TestAction?, postAction: TestAction?) throws {
+    public static func testMigration(store: SQLiteStoreDescription, bundle: Bundle, preAction: TestAction?, postAction: TestAction?) throws {
         try self.withTemporary(store: store) { testStore in
             try self.performTestAction(store: testStore.with(maxVersion: 0), bundle: bundle, expectedStepCount: nil) { persistentContainer in
                 preAction?(persistentContainer)
@@ -29,24 +29,31 @@ public enum TestTool {
         }
     }
 
-    public static func withTemporary(store: StoreInfo, action: (StoreInfo) throws -> Void) throws {
+    public static func withTemporary(store: SQLiteStoreDescription, action: (SQLiteStoreDescription) throws -> Void) throws {
         let tmp = UUID().uuidString
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(tmp, isDirectory: true)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true, attributes: nil)
         let url = dir.appendingPathComponent("db", isDirectory: false).appendingPathExtension("sqlite")
-        let testStore = StoreInfo(
+        let testStore = SQLiteStoreDescription(
             name: tmp,
             url: url,
             modelName: store.modelName,
             modelVersions: store.modelVersions,
             mappingModels: store.mappingModels
         )
-        try action(testStore)
+
+        do {
+            try action(testStore)
+        } catch {
+            try FileManager.default.removeItem(at: dir)
+            throw error
+        }
+
         try FileManager.default.removeItem(at: dir)
     }
 
     private static func performTestAction(
-        store: StoreInfo,
+        store: SQLiteStoreDescription,
         bundle: Bundle,
         expectedStepCount: Int?,
         testAction: (NSPersistentContainer) -> Void

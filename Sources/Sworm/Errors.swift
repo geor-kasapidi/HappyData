@@ -1,10 +1,7 @@
-public enum ActionError: Swift.Error {
+public enum DBError: Swift.Error, Equatable {
     case actionsProhibited
     case actionWasNotPerformed
-}
-
-public enum StoreError: Swift.Error {
-    case badVersion(String)
-    case noCompatibleVersionFound
+    case noCompatibleModelVersionFound
+    case badModelVersion(String)
     case badMappingModel(String)
 }

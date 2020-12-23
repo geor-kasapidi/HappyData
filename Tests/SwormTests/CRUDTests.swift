@@ -19,7 +19,7 @@ final class CRUDTests: XCTestCase {
                         ))
                     }
                 } catch {
-                    XCTAssert(error is ActionError)
+                    XCTAssert(error is DBError && (error as! DBError) == .actionsProhibited)
                 }
             }
         } catch {
