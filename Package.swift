@@ -22,9 +22,13 @@ let package = Package(
             name: "Sworm",
             dependencies: []
         ),
+        .target(
+            name: "SwormTools",
+            dependencies: []
+        ),
         .testTarget(
             name: "SwormTests",
-            dependencies: ["Sworm"]
+            dependencies: ["Sworm", "SwormTools"]
         ),
     ]
 )

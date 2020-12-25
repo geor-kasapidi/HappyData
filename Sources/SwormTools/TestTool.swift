@@ -1,8 +1,8 @@
-import CoreData.NSPersistentContainer
+import CoreData
 
 public enum TestTool {
-    public enum MigrationTestError: Swift.Error {
-        case invalidStepCount(Int?, expected: Int?, store: SQLiteStoreDescription)
+    public enum Error: Swift.Error {
+        case invalidMigrationStepCount(Int?, expected: Int?, store: SQLiteStoreDescription)
     }
 
     public typealias TestAction = (NSPersistentContainer) -> Void
@@ -62,7 +62,7 @@ public enum TestTool {
             let persistentContainer = try NSPersistentContainer(store: store, bundle: bundle)
             let migration = try SQLiteProgressiveMigration(store: store, bundle: bundle)
             if expectedStepCount != migration?.stepCount {
-                throw MigrationTestError.invalidStepCount(migration?.stepCount, expected: expectedStepCount, store: store)
+                throw Error.invalidMigrationStepCount(migration?.stepCount, expected: expectedStepCount, store: store)
             }
             try migration?.performMigration(progress: nil)
             try persistentContainer.loadPersistentStore()

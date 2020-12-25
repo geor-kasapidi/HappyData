@@ -1,8 +1,4 @@
-import Foundation.NSData
-import Foundation.NSDate
-import Foundation.NSDecimal
-import Foundation.NSURL
-import Foundation.NSUUID
+import Foundation
 
 public extension PrimitiveAttribute {
     func encodePrimitiveValue() -> Self { self }

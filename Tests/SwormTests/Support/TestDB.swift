@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Sworm
+import SwormTools
 import XCTest
 
 enum TestDB {

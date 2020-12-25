@@ -1,5 +1,4 @@
-import CoreData.NSPersistentContainer
-import Foundation.NSURL
+import CoreData
 
 public struct SQLiteStoreDescription {
     public let name: String

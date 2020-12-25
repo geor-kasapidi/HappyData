@@ -1,4 +1,4 @@
-import CoreData.NSManagedObject
+import CoreData
 
 public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
     let name: String

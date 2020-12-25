@@ -1,6 +1,10 @@
-import CoreData.NSManagedObjectModel
+import CoreData
 
 public final class SQLiteProgressiveMigration {
+    public enum Error: Swift.Error {
+        case storeCompatibleModelNotFound
+    }
+
     public typealias Progress = (Int, Int) -> Void
 
     final class Step {
@@ -25,12 +29,7 @@ public final class SQLiteProgressiveMigration {
                     destinationModel: destinationModel
                 )
             case let .bundle(bundle, name):
-                guard let url = bundle.url(forResource: name, withExtension: "cdm"),
-                      let mappingModel = NSMappingModel(contentsOf: url)
-                else {
-                    throw DBError.badMappingModel(name)
-                }
-                self.mappingModel = mappingModel
+                self.mappingModel = try bundle.mappingModel(name: name)
             }
             self.sourceModel = sourceModel
             self.destinationModel = destinationModel
@@ -68,16 +67,13 @@ public final class SQLiteProgressiveMigration {
         }
 
         let models: [NSManagedObjectModel] = try store.modelVersions.map { version in
-            if let model = bundle.managedObjectModel(forVersion: version, modelName: store.modelName) {
-                return model
-            }
-            throw DBError.badModelVersion(version)
+            try bundle.managedObjectModel(versionName: version, modelName: store.modelName)
         }
 
         guard let currentModelIndex = models.firstIndex(where: {
             $0.isConfiguration(withName: nil, compatibleWithStoreMetadata: metadata)
         }) else {
-            throw DBError.noCompatibleModelVersionFound
+            throw Error.storeCompatibleModelNotFound
         }
 
         let modelIndicesToMigrate = models.indices.dropFirst(currentModelIndex)

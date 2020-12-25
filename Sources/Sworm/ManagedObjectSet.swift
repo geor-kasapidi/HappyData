@@ -1,4 +1,4 @@
-import CoreData.NSManagedObject
+import CoreData
 
 public struct ManagedObjectSet<PlainObject: ManagedObjectConvertible>: Sequence {
     public struct Iterator: IteratorProtocol {

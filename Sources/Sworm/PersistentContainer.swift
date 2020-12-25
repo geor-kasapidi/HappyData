@@ -1,6 +1,10 @@
-import CoreData.NSPersistentContainer
+import CoreData
 
 public final class PersistentContainer {
+    public enum Error: Swift.Error {
+        case notReady
+    }
+
     public enum Queue {
         case `private`
         case main
@@ -17,7 +21,7 @@ public final class PersistentContainer {
     }
 
     private func perform<T>(on queue: Queue, _ action: (NSManagedObjectContext) throws -> T) throws -> T {
-        guard self.isReady() else { throw DBError.actionsProhibited }
+        guard self.isReady() else { throw Error.notReady }
 
         switch queue {
         case .main,

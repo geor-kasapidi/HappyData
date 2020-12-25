@@ -1,6 +1,7 @@
 import CoreData
 import Foundation
 import Sworm
+import SwormTools
 import XCTest
 
 @available(OSX 10.15, *)
@@ -19,7 +20,7 @@ final class CRUDTests: XCTestCase {
                         ))
                     }
                 } catch {
-                    XCTAssert(error is DBError && (error as! DBError) == .actionsProhibited)
+                    XCTAssert((error as? PersistentContainer.Error) == .notReady)
                 }
             }
         } catch {
