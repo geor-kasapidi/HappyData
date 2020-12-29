@@ -14,7 +14,7 @@ public struct SQLiteStoreDescription {
         modelVersions: [String],
         mappingModels: [String?]
     ) {
-        assert(mappingModels.count >= (modelVersions.count - 1))
+        assert(!modelVersions.isEmpty && mappingModels.count >= (modelVersions.count - 1))
 
         self.name = name
         self.url = url
