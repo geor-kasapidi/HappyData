@@ -16,6 +16,10 @@ let package = Package(
             name: "Sworm",
             targets: ["Sworm"]
         ),
+        .library(
+            name: "SwormTools",
+            targets: ["SwormTools"]
+        ),
     ],
     targets: [
         .target(
