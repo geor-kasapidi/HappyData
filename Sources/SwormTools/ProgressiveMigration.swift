@@ -67,7 +67,7 @@ public final class SQLiteProgressiveMigration {
         }
 
         let models: [NSManagedObjectModel] = try store.modelVersions.map { version in
-            try bundle.managedObjectModel(versionName: version, modelName: store.modelName)
+            try bundle.managedObjectModel(versionName: version.name, modelName: store.modelName)
         }
 
         guard let currentModelIndex = models.firstIndex(where: {
@@ -82,7 +82,7 @@ public final class SQLiteProgressiveMigration {
             try Step(
                 sourceModel: models[$0],
                 destinationModel: models[$1],
-                source: store.mappingModels[$0].flatMap { .bundle(bundle, $0) } ?? .auto
+                source: store.modelVersions[$1].mappingModelName.flatMap { .bundle(bundle, $0) } ?? .auto
             )
         }
 

@@ -38,8 +38,7 @@ public enum TestTool {
             name: tmp,
             url: url,
             modelName: store.modelName,
-            modelVersions: store.modelVersions,
-            mappingModels: store.mappingModels
+            modelVersions: store.modelVersions
         )
 
         do {

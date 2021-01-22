@@ -29,7 +29,10 @@ public extension Bundle {
 
 public extension NSPersistentContainer {
     convenience init(store: SQLiteStoreDescription, bundle: Bundle) throws {
-        let model = try bundle.managedObjectModel(versionName: store.modelVersions.last!, modelName: store.modelName)
+        let model = try bundle.managedObjectModel(
+            versionName: store.modelVersions.last!.name,
+            modelName: store.modelName
+        )
 
         self.init(name: store.name, managedObjectModel: model)
 

@@ -9,8 +9,7 @@ enum TestDB {
         name: "DataModel",
         url: NSPersistentContainer.defaultDirectoryURL(),
         modelName: "DataModel",
-        modelVersions: ["DataModel"],
-        mappingModels: []
+        modelVersions: ["DataModel"]
     )
 
     static func withTemporaryContainer(_ action: (PersistentContainer) throws -> Void) {

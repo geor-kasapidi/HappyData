@@ -13,8 +13,12 @@ final class MigrationsTests: XCTestCase {
             name: "MigratableStore",
             url: NSPersistentContainer.defaultDirectoryURL(), // not important here
             modelName: "MigratableDataModel",
-            modelVersions: ["V0", "V1", "V2", "V3"],
-            mappingModels: ["V0V1", "V1V2", nil]
+            modelVersions: [
+                "V0",
+                .init(name: "V1", mappingModelName: "V0V1"),
+                .init(name: "V2", mappingModelName: "V1V2"),
+                "V3",
+            ]
         )
 
         // all together
