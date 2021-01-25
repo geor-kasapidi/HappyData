@@ -1,5 +1,13 @@
 import CoreData
 
+public protocol ManagedObjectContextProvider {
+    var viewContext: NSManagedObjectContext { get }
+
+    func newBackgroundContext() -> NSManagedObjectContext
+}
+
+extension NSPersistentContainer: ManagedObjectContextProvider {}
+
 public final class PersistentContainer {
     public enum Error: Swift.Error {
         case notReady
@@ -11,12 +19,15 @@ public final class PersistentContainer {
         case automatic
     }
 
-    private let instance: NSPersistentContainer
+    private let managedObjectContextProvider: ManagedObjectContextProvider
 
     private let isReady: () -> Bool
 
-    public init(_ instance: NSPersistentContainer, isReady: @escaping () -> Bool = { true }) {
-        self.instance = instance
+    public init(
+        _ managedObjectContextProvider: ManagedObjectContextProvider,
+        isReady: @escaping () -> Bool = { true }
+    ) {
+        self.managedObjectContextProvider = managedObjectContextProvider
         self.isReady = isReady
     }
 
@@ -26,10 +37,10 @@ public final class PersistentContainer {
         switch queue {
         case .main,
              .automatic where Thread.isMainThread:
-            return try action(self.instance.viewContext)
+            return try action(self.managedObjectContextProvider.viewContext)
         case .private,
              .automatic:
-            return try action(self.instance.newBackgroundContext())
+            return try action(self.managedObjectContextProvider.newBackgroundContext())
         }
     }
 
