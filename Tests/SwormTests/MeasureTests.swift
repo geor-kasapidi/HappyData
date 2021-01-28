@@ -55,13 +55,14 @@ final class MeasureTests: XCTestCase {
     func testMeasureInsertEntitiesWithToManyRelations() {
         self.measure {
             TestDB.withTemporaryContainer { db in
+                let count = 1000
 
                 do {
                     try db.readWrite(action: { _, writer in
                         try writer.insert(Author.self) { mo in
                             mo.encode(.init(id: .init(), name: "xxx"))
 
-                            (0 ..< 1000).forEach { _ in
+                            (0 ..< count).forEach { _ in
                                 mo[\.books].add(.init(id: .init(), name: "yyy", date: .init()))
                             }
                         }
@@ -69,10 +70,9 @@ final class MeasureTests: XCTestCase {
 
                     try db.readWrite(action: { _, writer in
                         try writer.update(Author.all) { mo in
-                            for x in mo[\.books].enumerated() {
-                                if x.offset % 2 == 0 {
-                                    mo[\.books].remove(x.element)
-                                }
+                            var books = mo[\.books]
+                            books.prefix(count / 2).forEach {
+                                books.remove($0)
                             }
                         }
                     })
@@ -84,7 +84,7 @@ final class MeasureTests: XCTestCase {
                             }
                         }
                     })
-                    XCTAssert(x[0].count == 500)
+                    XCTAssert(x[0].count == count / 2)
                 } catch {
                     XCTFail(error.localizedDescription)
                 }
