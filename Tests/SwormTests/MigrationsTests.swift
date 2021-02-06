@@ -29,7 +29,7 @@ final class MigrationsTests: XCTestCase {
                 bundle: bundle,
                 preAction: {
                     print("FIRST STEP")
-                    let db = PersistentContainer($0)
+                    let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                     do {
                         try db.readWrite { _, writer in
                             try writer.insert(MigratableModels.A(id: 1, name: "foo"))
@@ -42,7 +42,7 @@ final class MigrationsTests: XCTestCase {
                 },
                 postAction: {
                     print("LAST STEP")
-                    let db = PersistentContainer($0)
+                    let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                     do {
                         let bs = try db.readOnly { reader in
                             try reader.fetch(MigratableModels.B.all).sorted()
@@ -94,7 +94,7 @@ final class MigrationsTests: XCTestCase {
                     0: {
                         print("STEP 0")
 
-                        let db = PersistentContainer($0)
+                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
                             try db.readWrite { _, writer in
                                 try writer.insert(MigratableModels.A(id: 1, name: "foo"))
@@ -108,7 +108,7 @@ final class MigrationsTests: XCTestCase {
                     1: {
                         print("STEP 1")
 
-                        let db = PersistentContainer($0)
+                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
                             let bs = try db.readOnly { reader in
                                 try reader.fetch(MigratableModels.B.all).sorted()
@@ -125,7 +125,7 @@ final class MigrationsTests: XCTestCase {
                     2: {
                         print("STEP 2")
 
-                        let db = PersistentContainer($0)
+                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
                             let bs = try db.readOnly { reader in
                                 try reader.fetch(MigratableModels.B.all).sorted()
@@ -142,7 +142,7 @@ final class MigrationsTests: XCTestCase {
                     3: {
                         print("STEP 3")
 
-                        let db = PersistentContainer($0)
+                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
                             try db.readWrite { _, writer in
                                 try writer.insert(MigratableModels.C(foo: "foo"))

@@ -17,7 +17,7 @@ enum TestDB {
             try TestTool.withTemporary(store: self.info) { testStore in
                 let container = try NSPersistentContainer(store: testStore, bundle: .module)
                 try container.loadPersistentStore()
-                try action(.init(container))
+                try action(.init(managedObjectContext: container.suitableContextForCurrentThread))
                 try container.removePersistentStores()
             }
         } catch {

@@ -48,8 +48,8 @@ public extension NSManagedObjectContext {
 }
 
 public extension NSManagedObjectContext {
-    func save<T>(_ action: @escaping () throws -> T) throws -> T {
-        try self.execute {
+    func save<T>(cleanUpAfterExecution: Bool, _ action: @escaping () throws -> T) throws -> T {
+        try self.execute(cleanUpAfterExecution: cleanUpAfterExecution) {
             let result = try action()
             if self.hasChanges {
                 try self.save()
@@ -58,7 +58,7 @@ public extension NSManagedObjectContext {
         }
     }
 
-    func execute<T>(_ action: @escaping () throws -> T) throws -> T {
+    func execute<T>(cleanUpAfterExecution: Bool, _ action: @escaping () throws -> T) throws -> T {
         var result: Result<T, Error>?
 
         self.performAndWait {
@@ -67,7 +67,10 @@ public extension NSManagedObjectContext {
                     try action()
                 }
             })
-            self.reset()
+
+            if cleanUpAfterExecution {
+                self.reset()
+            }
         }
 
         switch result {
@@ -78,5 +81,11 @@ public extension NSManagedObjectContext {
         case .none:
             fatalError()
         }
+    }
+}
+
+public extension NSPersistentContainer {
+    func suitableContextForCurrentThread() -> NSManagedObjectContext {
+        Thread.isMainThread ? self.viewContext : self.newBackgroundContext()
     }
 }
