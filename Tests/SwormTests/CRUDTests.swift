@@ -14,6 +14,9 @@ final class CRUDTests: XCTestCase {
                 let pc = PersistentContainer(
                     managedObjectContext: {
                         throw NotReadyError()
+                    },
+                    logError: { error in
+                        XCTAssert(error is NotReadyError)
                     }
                 )
                 do {

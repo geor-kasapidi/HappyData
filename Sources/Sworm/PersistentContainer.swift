@@ -2,14 +2,27 @@ import CoreData
 
 public final class PersistentContainer {
     private let managedObjectContext: () throws -> NSManagedObjectContext
+    private let logError: ((Swift.Error) -> Void)?
 
-    public init(managedObjectContext: @escaping () throws -> NSManagedObjectContext) {
+    public init(
+        managedObjectContext: @escaping () throws -> NSManagedObjectContext,
+        logError: ((Swift.Error) -> Void)? = nil
+    ) {
         self.managedObjectContext = managedObjectContext
+        self.logError = logError
     }
 
     @inline(__always)
     private func perform<T>(_ action: (NSManagedObjectContext) throws -> T) throws -> T {
-        try action(self.managedObjectContext())
+        do {
+            let moc = try self.managedObjectContext()
+
+            return try action(moc)
+        } catch {
+            self.logError?(error)
+
+            throw error
+        }
     }
 
     @discardableResult
