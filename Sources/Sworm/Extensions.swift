@@ -13,26 +13,6 @@ public extension NSManagedObject {
             self.didChangeValue(forKey: key)
         }
     }
-
-    subscript(mutableSet key: String) -> NSMutableSet {
-        self.mutableSetValue(forKey: key)
-    }
-
-    subscript(mutableOrderedSet key: String) -> NSMutableOrderedSet {
-        self.mutableOrderedSetValue(forKey: key)
-    }
-}
-
-public extension NSManagedObject {
-    func new(relation name: String) -> NSManagedObject {
-        .init(
-            entity: self
-                .entity
-                .relationshipsByName[name].unsafelyUnwrapped
-                .destinationEntity.unsafelyUnwrapped,
-            insertInto: self.managedObjectContext.unsafelyUnwrapped
-        )
-    }
 }
 
 public extension NSManagedObjectContext {
@@ -48,24 +28,16 @@ public extension NSManagedObjectContext {
 }
 
 public extension NSManagedObjectContext {
-    func save<T>(cleanUpAfterExecution: Bool, _ action: @escaping () throws -> T) throws -> T {
-        try self.execute(cleanUpAfterExecution: cleanUpAfterExecution) {
-            let result = try action()
-            if self.hasChanges {
-                try self.save()
-            }
-            return result
-        }
-    }
-
-    func execute<T>(cleanUpAfterExecution: Bool, _ action: @escaping () throws -> T) throws -> T {
+    func perform<T>(cleanUpAfterExecution: Bool, _ action: @escaping () throws -> T) throws -> T {
         var result: Result<T, Error>?
 
         self.performAndWait {
             result = Result(catching: {
-                try autoreleasepool {
-                    try action()
+                let value = try action()
+                if self.hasChanges {
+                    try self.save()
                 }
+                return value
             })
 
             if cleanUpAfterExecution {

@@ -1,0 +1,170 @@
+import Foundation
+import Sworm
+import SwormTools
+import XCTest
+
+@available(OSX 10.15, *)
+final class AttributeTests: XCTestCase {
+    private static let storeInfo = SQLiteStoreDescription(
+        name: "AttributeSetsDataModel",
+        url: FileManager.default.temporaryDirectory,
+        modelName: "AttributeSetsDataModel",
+        modelVersions: ["V0"]
+    )
+
+    func testPrimitiveAttributeFullSetReadWrite() {
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            let sourceInstance = PrimitiveAttributeFullSet(
+                x1: .random(),
+                x2: .random(in: .min ... .max),
+                x3: .random(in: .min ... .max),
+                x4: .random(in: .min ... .max),
+                x5: .random(in: .min ... .max),
+                x6: 100,
+                x7: 100,
+                x8: 100,
+                x9: Date(),
+                x10: "\(Int.random(in: .min ... .max))",
+                x11: Data(repeating: .random(in: .min ... .max), count: 16),
+                x12: .init(),
+                x13: URL(string: "https://stackoverflow.com")
+            )
+
+            try pc.perform { ctx in
+                ctx.insert(sourceInstance)
+            }
+
+            let destinationInstance = try pc.perform { ctx in
+                try ctx.fetchOne(PrimitiveAttributeFullSet.all)?.decode()
+            }
+
+            XCTAssert(sourceInstance == destinationInstance)
+        }
+    }
+
+    func testCustomAttributeSetReadWrite() {
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            let sourceInstances = [
+                CustomAttributeSet(
+                    x1: .init(.init(x: 1, y: 2)),
+                    x2: .init(.init(x: 3, y: 4)),
+                    x3: .init(x: 5, y: 6),
+                    x4: nil,
+                    x5: .y,
+                    x6: .z
+                ),
+                CustomAttributeSet(
+                    x1: .init(.init(x: 6, y: 5)),
+                    x2: .init(.init(x: 4, y: 3)),
+                    x3: nil,
+                    x4: .init(x: 2, y: 1),
+                    x5: .z,
+                    x6: .y
+                ),
+            ]
+
+            try pc.perform { ctx in
+                sourceInstances.forEach {
+                    ctx.insert($0)
+                }
+            }
+
+            let destinationInstances = try pc.perform { ctx in
+                try ctx.fetch(CustomAttributeSet.all.sort(\.x5))
+                    .map({ try $0.decode() })
+            }
+
+            XCTAssert(sourceInstances == destinationInstances)
+        }
+    }
+
+    func testDemoAttributeSetRefReadWrite() {
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            let sourceInstance1 = DemoAttributeSetRef()
+            sourceInstance1.x1 = 10
+
+            let sourceInstance2 = DemoAttributeSetRef()
+            sourceInstance2.x2 = 10
+
+            try pc.perform { ctx in
+                ctx.insert(sourceInstance1)
+                ctx.insert(sourceInstance2)
+            }
+
+            let destinationInstances = try pc.perform { ctx in
+                try ctx.fetch(DemoAttributeSetRef.all.sort(\.x1, ascending: false))
+                    .map({ try $0.decode() })
+            }
+
+            XCTAssert([sourceInstance1, sourceInstance2] == destinationInstances)
+        }
+    }
+
+    func testPrimitiveAttributeFullSetReadWriteMeasure() {
+        let N = 10000
+
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            self.measure {
+                do {
+                    try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
+
+                    _ = try pc.perform { ctx in
+                        try ctx.fetch(PrimitiveAttributeFullSet.all).map({ try $0.decode() })
+                    }
+                } catch {}
+            }
+        }
+    }
+
+    func testPrimitiveAttributeFullSetWriteMeasure() {
+        let N = 10000
+
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            self.measure {
+                do {
+                    try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
+                } catch {}
+            }
+        }
+    }
+
+    func testPrimitiveAttributeFullSetReadMeasure() {
+        let N = 10000
+
+        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+            try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
+
+            self.measure {
+                do {
+                    _ = try pc.perform { ctx in
+                        try ctx.fetch(PrimitiveAttributeFullSet.all).map({ try $0.decode() })
+                    }
+                } catch {}
+            }
+        }
+    }
+
+    private func writeRandomPrimitiveAttributeFullSets(n: Int, pc: PersistentContainer) throws {
+        try pc.perform { ctx in
+            try ctx.batchDelete(PrimitiveAttributeFullSet.all)
+
+            (0 ..< n).forEach { x in
+                ctx.insert(PrimitiveAttributeFullSet(
+                    x1: .random(),
+                    x2: .random(in: .min ... .max),
+                    x3: .random(in: .min ... .max),
+                    x4: .random(in: .min ... .max),
+                    x5: .random(in: .min ... .max),
+                    x6: Float(x),
+                    x7: Double(x),
+                    x8: .init(x),
+                    x9: Date(),
+                    x10: "\(Int.random(in: .min ... .max))",
+                    x11: Data(repeating: .random(in: .min ... .max), count: 16),
+                    x12: .init(),
+                    x13: URL(string: "https://stackoverflow.com")
+                ))
+            }
+        }
+    }
+}

@@ -1,19 +1,7 @@
 import CoreData
 
 public extension ManagedObjectConvertible {
-    static var all: Request<Self> { .all }
-}
-
-public struct Request<PlainObject: ManagedObjectConvertible> {
-    typealias SortDescriptor = (keyPath: PartialKeyPath<PlainObject>, asc: Bool)
-
-    let fetchLimit: Int?
-    let fetchOffset: Int?
-
-    let predicateDescriptor: PredicateDescriptor?
-    let sortDescriptors: [SortDescriptor]
-
-    public static var all: Self {
+    static var all: Request<Self> {
         .init(
             fetchLimit: nil,
             fetchOffset: nil,
@@ -21,6 +9,16 @@ public struct Request<PlainObject: ManagedObjectConvertible> {
             sortDescriptors: []
         )
     }
+}
+
+public struct Request<PlainObject: ManagedObjectConvertible> {
+    typealias SortDescriptor = (keyPath: PartialKeyPath<PlainObject>, ascending: Bool)
+
+    let fetchLimit: Int?
+    let fetchOffset: Int?
+
+    let predicateDescriptor: PredicateDescriptor?
+    let sortDescriptors: [SortDescriptor]
 
     public func limit(_ value: Int) -> Request<PlainObject> {
         .init(
@@ -59,46 +57,26 @@ public struct Request<PlainObject: ManagedObjectConvertible> {
     }
 
     public func sort<Attribute: SupportedAttributeType>(
-        asc keyPath: KeyPath<PlainObject, Attribute>
+        _ keyPath: KeyPath<PlainObject, Attribute>,
+        ascending: Bool = true
     ) -> Request<PlainObject> where Attribute.PrimitiveAttributeType: Comparable {
         .init(
             fetchLimit: self.fetchLimit,
             fetchOffset: self.fetchOffset,
             predicateDescriptor: self.predicateDescriptor,
-            sortDescriptors: self.sortDescriptors + [(keyPath, true)]
+            sortDescriptors: self.sortDescriptors + [(keyPath, ascending)]
         )
     }
 
     public func sort<Attribute: SupportedAttributeType>(
-        desc keyPath: KeyPath<PlainObject, Attribute>
+        _ keyPath: KeyPath<PlainObject, Attribute?>,
+        ascending: Bool = true
     ) -> Request<PlainObject> where Attribute.PrimitiveAttributeType: Comparable {
         .init(
             fetchLimit: self.fetchLimit,
             fetchOffset: self.fetchOffset,
             predicateDescriptor: self.predicateDescriptor,
-            sortDescriptors: self.sortDescriptors + [(keyPath, false)]
-        )
-    }
-
-    public func sort<Attribute: SupportedAttributeType>(
-        asc keyPath: KeyPath<PlainObject, Attribute?>
-    ) -> Request<PlainObject> where Attribute.PrimitiveAttributeType: Comparable {
-        .init(
-            fetchLimit: self.fetchLimit,
-            fetchOffset: self.fetchOffset,
-            predicateDescriptor: self.predicateDescriptor,
-            sortDescriptors: self.sortDescriptors + [(keyPath, true)]
-        )
-    }
-
-    public func sort<Attribute: SupportedAttributeType>(
-        desc keyPath: KeyPath<PlainObject, Attribute?>
-    ) -> Request<PlainObject> where Attribute.PrimitiveAttributeType: Comparable {
-        .init(
-            fetchLimit: self.fetchLimit,
-            fetchOffset: self.fetchOffset,
-            predicateDescriptor: self.predicateDescriptor,
-            sortDescriptors: self.sortDescriptors + [(keyPath, false)]
+            sortDescriptors: self.sortDescriptors + [(keyPath, ascending)]
         )
     }
 }
@@ -131,7 +109,7 @@ extension Request {
             fetchRequest.sortDescriptors = self.sortDescriptors.map {
                 NSSortDescriptor(
                     key: PlainObject.attribute($0.keyPath).name,
-                    ascending: $0.asc
+                    ascending: $0.ascending
                 )
             }
         }

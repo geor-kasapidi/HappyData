@@ -6,16 +6,19 @@ public extension PrimitiveAttribute {
     static func decode(primitiveValue: Self) throws -> Self { primitiveValue }
 }
 
-extension Bool: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Int: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Int16: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Int32: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Int64: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Float: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Double: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Decimal: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Date: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension String: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension Data: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension UUID: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
-extension URL: PrimitiveAttribute, SupportedAttributeType { public static let metadata: PrimitiveAttributeMetadata = .init() }
+extension Bool: PrimitiveAttribute, SupportedAttributeType {}
+
+extension Int: PrimitiveAttribute, SupportedAttributeType {}
+extension Int16: PrimitiveAttribute, SupportedAttributeType {}
+extension Int32: PrimitiveAttribute, SupportedAttributeType {}
+extension Int64: PrimitiveAttribute, SupportedAttributeType {}
+
+extension Float: PrimitiveAttribute, SupportedAttributeType {}
+extension Double: PrimitiveAttribute, SupportedAttributeType {}
+extension Decimal: PrimitiveAttribute, SupportedAttributeType {}
+
+extension Date: PrimitiveAttribute, SupportedAttributeType {}
+extension String: PrimitiveAttribute, SupportedAttributeType {}
+extension Data: PrimitiveAttribute, SupportedAttributeType {}
+extension UUID: PrimitiveAttribute, SupportedAttributeType {}
+extension URL: PrimitiveAttribute, SupportedAttributeType {}

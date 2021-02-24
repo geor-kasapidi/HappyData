@@ -24,4 +24,20 @@ enum TestDB {
             XCTFail(error.localizedDescription)
         }
     }
+
+    static func withTemporaryContainer(
+        store: SQLiteStoreDescription,
+        action: (PersistentContainer) throws -> Void
+    ) {
+        do {
+            try TestTool.withTemporary(store: store) { testStore in
+                let container = try NSPersistentContainer(store: testStore, bundle: .module)
+                try container.loadPersistentStore()
+                try action(.init(managedObjectContext: container.suitableContextForCurrentThread))
+                try container.removePersistentStores()
+            }
+        } catch {
+            XCTFail(error.localizedDescription)
+        }
+    }
 }

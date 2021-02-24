@@ -20,8 +20,8 @@ final class CRUDTests: XCTestCase {
                     }
                 )
                 do {
-                    try pc.readWrite { _, writer in
-                        try writer.insert(Book(
+                    try pc.perform { context in
+                        context.insert(Book(
                             id: .init(),
                             name: "A",
                             date: Date()
@@ -52,14 +52,14 @@ final class CRUDTests: XCTestCase {
 
             // INSERT
             do {
-                try db.readWrite(action: { _, writer in
-                    try writer.insert(book1)
+                try db.perform(action: { context in
+                    context.insert(book1)
                 })
             }
             // FETCH
             do {
-                let books = try db.readOnly(action: { reader in
-                    try reader.fetch(Book.all)
+                let books = try db.perform(action: { context in
+                    try context.fetch(Book.all).map({ try $0.decode() })
                 })
 
                 XCTAssert(books.count == 1)
@@ -67,16 +67,16 @@ final class CRUDTests: XCTestCase {
             }
             // UPDATE
             do {
-                try db.readWrite(action: { _, writer in
-                    try writer.update(Book.all) {
+                try db.perform(action: { context in
+                    try context.fetch(Book.all).forEach {
                         $0.encode(book2)
                     }
                 })
             }
             // FETCH
             do {
-                let books = try db.readOnly(action: { reader in
-                    try reader.fetch(Book.all)
+                let books = try db.perform(action: { context in
+                    try context.fetch(Book.all).map({ try $0.decode() })
                 })
 
                 XCTAssert(books.count == 1)
@@ -84,14 +84,14 @@ final class CRUDTests: XCTestCase {
             }
             // DELETE
             do {
-                try db.readWrite(action: { _, writer in
-                    try writer.delete(Book.all)
+                try db.perform(action: { context in
+                    try context.delete(Book.all)
                 })
             }
             // COUNT
             do {
-                let booksCount = try db.readOnly(action: { reader in
-                    try reader.count(of: Book.all)
+                let booksCount = try db.perform(action: { context in
+                    try context.count(of: Book.all)
                 })
 
                 XCTAssert(booksCount == 0)
@@ -122,22 +122,20 @@ final class CRUDTests: XCTestCase {
 
             // INSERT
             do {
-                try db.readWrite(action: { _, writer in
-                    try writer.insert(Book.self) {
-                        $0.encode(book1)
-                        $0.set(\.bookCover, value: cover)
-                        $0[\.bookCover]?.set(\.foo, value: foo)
-                    }
+                try db.perform(action: { context in
+                    let bookObject = context.insert(book1)
+                    bookObject.bookCover = context.insert(cover)
+                    bookObject.bookCover?.foo = context.insert(foo)
                 })
             }
             // FETCH
             do {
-                let booksWithCoversWithFoos = try db.readOnly(action: { reader in
-                    try reader.fetch(Book.all) {
+                let booksWithCoversWithFoos = try db.perform(action: { context in
+                    try context.fetch(Book.all).map {
                         (
                             try $0.decode(),
-                            try $0[\.bookCover]?.decode(),
-                            try $0[\.bookCover]?[\.foo]?.decode()
+                            try $0.bookCover?.decode(),
+                            try $0.bookCover?.foo?.decode()
                         )
                     }
                 })
@@ -149,21 +147,21 @@ final class CRUDTests: XCTestCase {
             }
             // UPDATE
             do {
-                try db.readWrite(action: { _, writer in
-                    try writer.update(Book.all) {
-                        $0[\.bookCover]?.set(\.book, value: book2)
-                        $0[\.bookCover]?.set(\.foo, object: nil)
+                try db.perform(action: { context in
+                    try context.fetch(Book.all).forEach {
+                        $0.bookCover?.book?.encode(book2)
+                        $0.bookCover?.foo = nil
                     }
                 })
             }
             // FETCH
             do {
-                let booksWithCoversWithFoos = try db.readOnly(action: { reader in
-                    try reader.fetch(Book.all) {
+                let booksWithCoversWithFoos = try db.perform(action: { context in
+                    try context.fetch(Book.all).map {
                         (
                             try $0.decode(),
-                            try $0[\.bookCover]?.decode(),
-                            try $0[\.bookCover]?[\.foo]?.decode()
+                            try $0.bookCover?.decode(),
+                            try $0.bookCover?.foo?.decode()
                         )
                     }
                 })
@@ -189,14 +187,14 @@ final class CRUDTests: XCTestCase {
             do {
                 // INSERT (success)
                 do {
-                    try db.readWrite(action: { _, writer in
-                        try writer.insert(book)
+                    try db.perform(action: { context in
+                        context.insert(book)
                     })
                 }
                 // INSERT (fail)
                 do {
-                    try db.readWrite(action: { _, writer in
-                        try writer.insert(book)
+                    try db.perform(action: { context in
+                        context.insert(book)
                     })
                 } catch {
                     hasError = true
@@ -219,9 +217,9 @@ final class CRUDTests: XCTestCase {
 
             // INSERT
             do {
-                try db.readWrite(action: { _, writer in
+                try db.perform(action: { context in
                     for _ in 1 ... 10 {
-                        try writer.insert(book)
+                        context.insert(book)
                     }
                 })
             } catch {
@@ -231,8 +229,8 @@ final class CRUDTests: XCTestCase {
             XCTAssert(hasError)
 
             // FETCH
-            let books = try db.readOnly(action: { reader in
-                try reader.fetch(Book.all)
+            let books = try db.perform(action: { context in
+                try context.fetch(Book.all)
             })
 
             XCTAssert(books.isEmpty)
@@ -242,9 +240,9 @@ final class CRUDTests: XCTestCase {
     func testRequestSortLimit() {
         TestDB.withTemporaryContainer { db in
             // INSERT
-            try db.readWrite(action: { _, writer in
+            try db.perform(action: { context in
                 for i in (1 ... 10).reversed() {
-                    try writer.insert(
+                    context.insert(
                         Book(
                             id: .init(),
                             name: "\(i)",
@@ -255,15 +253,15 @@ final class CRUDTests: XCTestCase {
             })
 
             // FETCH
-            let bookNames = try db.readOnly(action: { reader in
-                try reader.fetch(
+            let bookNames = try db.perform(action: { context in
+                try context.fetch(
                     Book
                         .all
-                        .sort(asc: \.date)
-                        .sort(asc: \.name)
+                        .sort(\.date)
+                        .sort(\.name)
                         .limit(8)
                         .offset(1),
-                    attribute: \.name
+                    \.name
                 )
             })
 
@@ -274,9 +272,9 @@ final class CRUDTests: XCTestCase {
     func testRequestPredicate() {
         TestDB.withTemporaryContainer { db in
             // INSERT
-            try db.readWrite(action: { _, writer in
+            try db.perform(action: { context in
                 for i in (1 ... 10).reversed() {
-                    try writer.insert(
+                    context.insert(
                         Book(
                             id: i % 2 == 0 ? .init() : nil,
                             name: "\(i)",
@@ -287,253 +285,53 @@ final class CRUDTests: XCTestCase {
             })
 
             // FETCH
-            let bookWithoutIDs = try db.readOnly(action: { reader in
-                try reader.fetch(
+            let bookWithoutIDs = try db.perform(action: { context in
+                try context.fetch(
                     Book
                         .all
                         .where(\Book.id == nil)
-                        .sort(asc: \.name),
-                    attribute: \.name
+                        .sort(\.name),
+                    \.name
                 )
             })
 
             XCTAssert(bookWithoutIDs == ["1", "3", "5", "7", "9"])
 
-            let bookWithIDs = try db.readOnly(action: { reader in
-                try reader.fetch(
+            let bookWithIDs = try db.perform(action: { context in
+                try context.fetch(
                     Book
                         .all
                         .where(\Book.id != nil)
-                        .sort(asc: \.name),
-                    attribute: \.name
+                        .sort(\.name),
+                    \.name
                 )
             })
 
             XCTAssert(bookWithIDs == ["10", "2", "4", "6", "8"])
 
-            let bookWithFutureDates = try db.readOnly(action: { reader in
-                try reader.fetch(
+            let bookWithFutureDates = try db.perform(action: { context in
+                try context.fetch(
                     Book
                         .all
                         .where(\Book.date > Date())
-                        .sort(asc: \.name),
-                    attribute: \.name
+                        .sort(\.name),
+                    \.name
                 )
             })
 
             XCTAssert(bookWithFutureDates == ["1", "3", "5", "7", "9"])
 
-            let bookWithFutureDatesAndExcludedIDs = try db.readOnly(action: { reader in
-                try reader.fetch(
+            let bookWithFutureDatesAndExcludedIDs = try db.perform(action: { context in
+                try context.fetch(
                     Book
                         .all
                         .where(\Book.date > Date() && !(\Book.name === ["3", "5"]))
-                        .sort(asc: \.name),
-                    attribute: \.name
+                        .sort(\.name),
+                    \.name
                 )
             })
 
             XCTAssert(bookWithFutureDatesAndExcludedIDs == ["1", "7", "9"])
-        }
-    }
-
-    func testAttributeTypes() {
-        TestDB.withTemporaryContainer { db in
-            let testCases: [FullHouse] = [
-                FullHouse(
-                    x1: true,
-                    x2: 10,
-                    x3: 20,
-                    x4: 30,
-                    x5: 10,
-                    x6: 20,
-                    x7: Date(),
-                    x8: "foo",
-                    x9: .init(.init(id: 10, name: "bar")),
-                    x10: URL(string: "google.com"),
-                    x11: .init(),
-                    x12: 1000,
-                    x13: .rty
-                ),
-                FullHouse(),
-                FullHouse(
-                    x2: 10,
-                    x4: 30,
-                    x6: 20,
-                    x8: "foo",
-                    x10: URL(string: "google.com"),
-                    x12: 1000
-                ),
-                FullHouse(
-                    x1: true,
-                    x3: 20,
-                    x5: 10,
-                    x7: Date(),
-                    x9: .init(.init(id: 10, name: "bar")),
-                    x11: .init(),
-                    x13: .qwe
-                ),
-            ]
-
-            try testCases.forEach { x in
-                // INSERT
-                try db.readWrite { _, writer in
-                    try writer.delete(FullHouse.all)
-                    try writer.insert(x)
-                }
-
-                // FETCH
-                let result = try db.readOnly { reader in
-                    try reader.fetch(FullHouse.all)
-                }
-
-                XCTAssert(result.count == 1)
-                XCTAssert(result[0] == x)
-            }
-        }
-    }
-
-    func testCustomAttributeRequest() {
-        TestDB.withTemporaryContainer { db in
-            let xx: [FullHouse] = [
-                FullHouse(
-                    x2: 11,
-                    x13: .rty
-                ),
-                FullHouse(
-                    x2: 10,
-                    x13: .qwe
-                ),
-            ]
-
-            // INSERT
-            try db.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try xx.forEach {
-                    try writer.insert($0)
-                }
-            }
-
-            // FETCH
-            let result = try db.readOnly { reader in
-                try reader.fetch(FullHouse.all.where(\FullHouse.x13 == .qwe), attribute: \.x2)
-            }
-
-            XCTAssert(result.count == 1)
-            XCTAssert(result[0] == 10)
-        }
-    }
-
-    func testTextPredicates() {
-        TestDB.withTemporaryContainer { db in
-            let xx: [FullHouse] = [
-                FullHouse(
-                    x8: "AbCd"
-                ),
-                FullHouse(
-                    x8: "aBcD"
-                ),
-            ]
-
-            // INSERT
-            try db.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try xx.forEach {
-                    try writer.insert($0)
-                }
-            }
-
-            // FETCH
-            do {
-                let result: [String?] = try db.readOnly { reader in
-                    try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b")), attribute: \.x8)
-                }
-
-                XCTAssert(result.count == 2)
-            }
-
-            // FETCH
-            do {
-                let result: [String?] = try db.readOnly { reader in
-                    try reader.fetch(FullHouse.all.where(Query.contains(\FullHouse.x8, "b", caseInsensitive: false)), attribute: \.x8)
-                }
-
-                XCTAssert(result.count == 1)
-            }
-
-            // FETCH
-            do {
-                let result: [String?] = try db.readOnly { reader in
-                    try reader.fetch(FullHouse.all.where(Query.beginsWith(\FullHouse.x8, "ab")), attribute: \.x8)
-                }
-
-                XCTAssert(result.count == 2)
-            }
-
-            // FETCH
-            do {
-                let result: [String?] = try db.readOnly { reader in
-                    try reader.fetch(FullHouse.all.where(Query.endsWith(\FullHouse.x8, "cd")), attribute: \.x8)
-                }
-
-                XCTAssert(result.count == 2)
-            }
-        }
-    }
-
-    func testMultiThreadReadWrite() {
-        TestDB.withTemporaryContainer { db in
-
-            let group = DispatchGroup()
-
-            (1 ... 10).forEach { (x: Int16) in
-                group.enter()
-                DispatchQueue.global().async {
-                    do {
-                        try db.readWrite { _, writer in
-                            try writer.insert(FullHouse(x2: x))
-                        }
-                    } catch {}
-                    group.leave()
-                }
-            }
-
-            group.wait()
-
-            let items = try db.readOnly { reader in
-                try reader.fetch(FullHouse.all.sort(asc: \.x2), attribute: \.x2)
-            }
-
-            XCTAssert(items == Array(1 ... 10))
-        }
-    }
-
-    func testEncodeDecodeSingleAttribute() {
-        TestDB.withTemporaryContainer { db in
-            try db.readWrite { _, writer in
-                try writer.batchDelete(FullHouse.all)
-                try writer.insert(FullHouse())
-            }
-
-            let a = try db.readOnly { reader in
-                try reader.fetchOne(FullHouse.all, attribute: \.x2)
-            }
-
-            XCTAssert(a == nil)
-
-            try db.readWrite { _, writer in
-                try writer.update(FullHouse.all) {
-                    $0.encode(attribute: \.x2, 16)
-                }
-            }
-
-            let b = try db.readOnly { reader in
-                try reader.fetchOne(FullHouse.all) {
-                    try $0.decode(attribute: \.x2)
-                }
-            }
-
-            XCTAssert(b == 16)
         }
     }
 
@@ -542,25 +340,24 @@ final class CRUDTests: XCTestCase {
             let authorID = UUID()
 
             do {
-                try db.readWrite { _, writer in
-                    try writer.insert(Author.self) {
-                        $0.encode(
-                            .init(
-                                id: authorID,
-                                name: "pushkin"
-                            )
-                        )
-                        $0[\.books].add(Book(name: "1"))
-                        $0[\.books].add(Book(name: "2"))
-                        $0[\.books].add(Book(name: "3"))
+                try db.perform { context in
+                    let authorObject = context.insert(Author(
+                        id: authorID,
+                        name: "pushkin"
+                    ))
+
+                    ["1", "2", "3"].forEach {
+                        authorObject.books.add(context.insert(Book(name: $0)))
                     }
                 }
             }
 
             do {
-                let bookNames = try db.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
+                let bookNames = try db.perform { context in
+                    try context.fetchOne(Author.all).map {
+                        try $0.books
+                            .map { try $0.decode(\.name) }
+                            .sorted()
                     }
                 }
 
@@ -568,56 +365,37 @@ final class CRUDTests: XCTestCase {
             }
 
             do {
-                try db.readWrite { _, writer in
-                    try writer.update(Author.all) { mo in
-                        try mo[\.books].filter {
-                            try $0.decode(attribute: \.name) == "2"
-                        }.forEach {
-                            mo[\.books].remove($0)
-                            writer.delete($0)
-                        }
+                try db.perform { context in
+                    try context.fetch(Author.all).forEach { mo in
+                        try mo.books
+                            .filter {
+                                try $0.decode(\.name) == "2"
+                            }
+                            .forEach {
+                                mo.books.remove($0)
+                                context.delete($0)
+                            }
                     }
                 }
             }
 
             do {
-                let bookNames = try db.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.books].map { try $0.decode(attribute: \.name) }.sorted()
+                let bookNames = try db.perform { context in
+                    try context.fetchOne(Author.all).map {
+                        try $0.books
+                            .map { try $0.decode(\.name) }
+                            .sorted()
                     }
                 }
 
                 XCTAssert(bookNames == ["1", "3"])
 
-                let allBookNames = try db.readOnly { reader in
-                    try reader.fetch(Book.all, attribute: \.name).sorted()
+                let allBookNames = try db.perform { context in
+                    try context.fetch(Book.all, \.name).sorted()
                 }
 
                 XCTAssert(allBookNames == ["1", "3"])
             }
-        }
-    }
-
-    func testReferenceSemantic() {
-        TestDB.withTemporaryContainer { db in
-            let bookRef = BookRef()
-            bookRef.name = "xxx"
-
-            try db.readWrite { _, writer in
-                try writer.insert(bookRef)
-            }
-
-            let fetchedRef = try db.readOnly { reader in
-                try reader.fetchOne(BookRef.all)
-            }
-
-            XCTAssert(fetchedRef == bookRef)
-
-            let fetchedRefName = try db.readOnly { reader in
-                try reader.fetchOne(BookRef.all, attribute: \.name)
-            }
-
-            XCTAssert(fetchedRefName == "xxx")
         }
     }
 
@@ -626,25 +404,26 @@ final class CRUDTests: XCTestCase {
             let authorID = UUID()
 
             do {
-                try db.readWrite { _, writer in
-                    try writer.insert(Author.self) {
-                        $0.encode(
-                            .init(
-                                id: authorID,
-                                name: "pushkin"
-                            )
-                        )
-                        $0[\.orderedBooks].add(Book(name: "4"))
-                        $0[\.orderedBooks].add(Book(name: "3"))
-                        $0[\.orderedBooks].add(Book(name: "2"))
-                    }
+                try db.perform { context in
+                    let authorObject = context.insert(Author(
+                        id: authorID,
+                        name: "pushkin"
+                    ))
+
+                    (2 ... 4)
+                        .reversed()
+                        .map({ Book(name: String($0)) })
+                        .forEach {
+                            authorObject.orderedBooks.add(context.insert($0))
+                        }
                 }
             }
 
             do {
-                let bookNames = try db.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.orderedBooks].map { try $0.decode(attribute: \.name) }
+                let bookNames = try db.perform { context in
+                    try context.fetchOne(Author.all).map {
+                        try $0.orderedBooks
+                            .map { try $0.decode(\.name) }
                     }
                 }
 
@@ -654,29 +433,34 @@ final class CRUDTests: XCTestCase {
             let coverID = UUID()
 
             do {
-                try db.readWrite { _, writer in
-                    try writer.update(Author.all) { mo in
-                        for var x in mo[\.orderedBooks] {
-                            x.set(\.bookCover, value: .init(id: coverID, imageData: .init(repeating: 0, count: 10)))
+                try db.perform { context in
+                    try context.fetch(Author.all).forEach { mo in
+                        for x in mo.orderedBooks {
+                            x.bookCover = context.insert(.init(
+                                id: coverID,
+                                imageData: .init(repeating: 0, count: 10)
+                            ))
                         }
 
-                        try mo[\.orderedBooks].filter {
-                            try $0.decode(attribute: \.name) == "3"
-                        }.forEach {
-                            mo[\.orderedBooks].remove($0)
-                            writer.delete($0)
-                        }
+                        try mo.orderedBooks
+                            .filter {
+                                try $0.decode(\.name) == "3"
+                            }
+                            .forEach {
+                                mo.orderedBooks.remove($0)
+                                context.delete($0)
+                            }
                     }
                 }
             }
 
             do {
-                let books = try db.readOnly { reader in
-                    try reader.fetchOne(Author.all) {
-                        try $0[\.orderedBooks].map {
+                let books = try db.perform { context in
+                    try context.fetchOne(Author.all).map {
+                        try $0.orderedBooks.map {
                             (
                                 try $0.decode(),
-                                try ($0[\.bookCover]?.decode(attribute: \.id))
+                                try ($0.bookCover?.decode(\.id))
                             )
                         }
                     }
@@ -685,8 +469,8 @@ final class CRUDTests: XCTestCase {
                 XCTAssert(books?.map(\.0.name) == ["4", "2"])
                 XCTAssert(books?.map(\.1) == [coverID, coverID])
 
-                let allBookNames = try db.readOnly { reader in
-                    try reader.fetch(Book.all, attribute: \.name).sorted()
+                let allBookNames = try db.perform { context in
+                    try context.fetch(Book.all, \.name).sorted()
                 }
 
                 XCTAssert(allBookNames == ["2", "4"])

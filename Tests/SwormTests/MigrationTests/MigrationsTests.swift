@@ -31,9 +31,9 @@ final class MigrationsTests: XCTestCase {
                     print("FIRST STEP")
                     let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                     do {
-                        try db.readWrite { _, writer in
-                            try writer.insert(MigratableModels.A(id: 1, name: "foo"))
-                            try writer.insert(MigratableModels.A(id: 2, name: "bar"))
+                        try db.perform { context in
+                            context.insert(MigratableModels.A(id: 1, name: "foo"))
+                            context.insert(MigratableModels.A(id: 2, name: "bar"))
                         }
                     } catch {
                         XCTFail(error.localizedDescription)
@@ -44,8 +44,10 @@ final class MigrationsTests: XCTestCase {
                     print("LAST STEP")
                     let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                     do {
-                        let bs = try db.readOnly { reader in
-                            try reader.fetch(MigratableModels.B.all).sorted()
+                        let bs = try db.perform { context in
+                            try context.fetch(MigratableModels.B.all)
+                                .map({ try $0.decode() })
+                                .sorted()
                         }
 
                         XCTAssert(bs.count == 2)
@@ -57,9 +59,9 @@ final class MigrationsTests: XCTestCase {
                     }
 
                     do {
-                        try db.readWrite { _, writer in
-                            try writer.insert(MigratableModels.C(foo: "foo"))
-                            try writer.insert(MigratableModels.C(foo: "bar"))
+                        try db.perform { context in
+                            context.insert(MigratableModels.C(foo: "foo"))
+                            context.insert(MigratableModels.C(foo: "bar"))
                         }
                     } catch {
                         XCTFail(error.localizedDescription)
@@ -67,8 +69,10 @@ final class MigrationsTests: XCTestCase {
                     }
 
                     do {
-                        let cs = try db.readOnly { reader in
-                            try reader.fetch(MigratableModels.C.all).sorted()
+                        let cs = try db.perform { context in
+                            try context.fetch(MigratableModels.C.all)
+                                .map({ try $0.decode() })
+                                .sorted()
                         }
 
                         XCTAssert(cs.count == 2)
@@ -96,9 +100,9 @@ final class MigrationsTests: XCTestCase {
 
                         let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
-                            try db.readWrite { _, writer in
-                                try writer.insert(MigratableModels.A(id: 1, name: "foo"))
-                                try writer.insert(MigratableModels.A(id: 2, name: "bar"))
+                            try db.perform { context in
+                                context.insert(MigratableModels.A(id: 1, name: "foo"))
+                                context.insert(MigratableModels.A(id: 2, name: "bar"))
                             }
                         } catch {
                             XCTFail(error.localizedDescription)
@@ -110,8 +114,10 @@ final class MigrationsTests: XCTestCase {
 
                         let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
-                            let bs = try db.readOnly { reader in
-                                try reader.fetch(MigratableModels.B.all).sorted()
+                            let bs = try db.perform { context in
+                                try context.fetch(MigratableModels.B.all)
+                                    .map({ try $0.decode() })
+                                    .sorted()
                             }
 
                             XCTAssert(bs.count == 2)
@@ -127,8 +133,10 @@ final class MigrationsTests: XCTestCase {
 
                         let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
-                            let bs = try db.readOnly { reader in
-                                try reader.fetch(MigratableModels.B.all).sorted()
+                            let bs = try db.perform { context in
+                                try context.fetch(MigratableModels.B.all)
+                                    .map({ try $0.decode() })
+                                    .sorted()
                             }
 
                             XCTAssert(bs.count == 2)
@@ -144,9 +152,9 @@ final class MigrationsTests: XCTestCase {
 
                         let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
                         do {
-                            try db.readWrite { _, writer in
-                                try writer.insert(MigratableModels.C(foo: "foo"))
-                                try writer.insert(MigratableModels.C(foo: "bar"))
+                            try db.perform { context in
+                                context.insert(MigratableModels.C(foo: "foo"))
+                                context.insert(MigratableModels.C(foo: "bar"))
                             }
                         } catch {
                             XCTFail(error.localizedDescription)
@@ -154,8 +162,10 @@ final class MigrationsTests: XCTestCase {
                         }
 
                         do {
-                            let cs = try db.readOnly { reader in
-                                try reader.fetch(MigratableModels.C.all).sorted()
+                            let cs = try db.perform { context in
+                                try context.fetch(MigratableModels.C.all)
+                                    .map({ try $0.decode() })
+                                    .sorted()
                             }
 
                             XCTAssert(cs.count == 2)

@@ -1,13 +1,11 @@
 import CoreData
 
-public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
+public final class Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
     let name: String
     let keyPath: PartialKeyPath<PlainObject>
 
     let encode: (PlainObject, NSManagedObject) -> Void
     let decode: (inout PlainObject, NSManagedObject) throws -> Void
-
-    // MARK: - Equatable & Hashable
 
     public func hash(into hasher: inout Hasher) {
         self.keyPath.hash(into: &hasher)
@@ -16,8 +14,6 @@ public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
     public static func == (lhs: Attribute<PlainObject>, rhs: Attribute<PlainObject>) -> Bool {
         lhs.keyPath == rhs.keyPath
     }
-
-    // MARK: - Value types
 
     public init<Attribute: SupportedAttributeType>(
         _ keyPath: WritableKeyPath<PlainObject, Attribute>,
@@ -30,7 +26,7 @@ public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
         }
         self.decode = { plainObject, managedObject in
             do {
-                plainObject[keyPath: keyPath] = try Attribute.decodeAny(managedObject[primitiveValue: name])
+                plainObject[keyPath: keyPath] = try Attribute.decode(managedObject[primitiveValue: name])
             } catch {
                 throw AttributeError.badAttribute(
                     .init(
@@ -54,57 +50,7 @@ public struct Attribute<PlainObject: ManagedObjectConvertible>: Hashable {
         }
         self.decode = { plainObject, managedObject in
             do {
-                plainObject[keyPath: keyPath] = try Attribute?.decodeAny(managedObject[primitiveValue: name])
-            } catch {
-                throw AttributeError.badAttribute(
-                    .init(
-                        name: name,
-                        entity: managedObject.entity.name ?? "",
-                        originalError: error
-                    )
-                )
-            }
-        }
-    }
-
-    // MARK: - Reference types
-
-    public init<Attribute: SupportedAttributeType>(
-        _ keyPath: ReferenceWritableKeyPath<PlainObject, Attribute>,
-        _ name: String
-    ) {
-        self.name = name
-        self.keyPath = keyPath
-        self.encode = { plainObject, managedObject in
-            managedObject[primitiveValue: name] = plainObject[keyPath: keyPath].encodePrimitiveValue()
-        }
-        self.decode = { plainObject, managedObject in
-            do {
-                plainObject[keyPath: keyPath] = try Attribute.decodeAny(managedObject[primitiveValue: name])
-            } catch {
-                throw AttributeError.badAttribute(
-                    .init(
-                        name: name,
-                        entity: managedObject.entity.name ?? "",
-                        originalError: error
-                    )
-                )
-            }
-        }
-    }
-
-    public init<Attribute: SupportedAttributeType>(
-        _ keyPath: ReferenceWritableKeyPath<PlainObject, Attribute?>,
-        _ name: String
-    ) {
-        self.name = name
-        self.keyPath = keyPath
-        self.encode = { plainObject, managedObject in
-            managedObject[primitiveValue: name] = plainObject[keyPath: keyPath]?.encodePrimitiveValue()
-        }
-        self.decode = { plainObject, managedObject in
-            do {
-                plainObject[keyPath: keyPath] = try Attribute?.decodeAny(managedObject[primitiveValue: name])
+                plainObject[keyPath: keyPath] = try Attribute?.decode(managedObject[primitiveValue: name])
             } catch {
                 throw AttributeError.badAttribute(
                     .init(

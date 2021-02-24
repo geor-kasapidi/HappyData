@@ -13,15 +13,13 @@ final class UnsafeTests: XCTestCase {
                 date: Date()
             )
 
-            try db.readWrite(action: { _, writer in
-                try writer.insert(book)
+            try db.perform(action: { context in
+                context.insert(book)
             })
 
-            let managedObject = try db.readOnly(action: { reader in
-                try reader.fetch(Book.all) {
-                    $0 // do not use managed object wrapper outside read/write closure
-                }
-            }).first
+            let managedObject = try db.perform(action: { context in
+                try context.fetchOne(Book.all)
+            })
 
             _ = try? managedObject?.decode() // bad access here
         }
@@ -29,17 +27,15 @@ final class UnsafeTests: XCTestCase {
 
     func _testBadAccess2() {
         TestDB.withTemporaryContainer { db in
-            try db.readWrite(action: { _, writer in
-                try writer.insert(Author.self) {
-                    $0.encode(Author(id: .init()))
-                    $0[\.books].add(.init())
-                }
+            try db.perform(action: { context in
+                context
+                    .insert(Author(id: .init()))
+                    .books
+                    .add(context.insert(Book()))
             })
 
-            let managedObjects = try db.readOnly(action: { reader in
-                try reader.fetchOne(Author.all) {
-                    $0[\.books]
-                }
+            let managedObjects = try db.perform(action: { context in
+                try context.fetchOne(Author.all)?.books
             })!
 
             managedObjects.forEach {
@@ -50,14 +46,14 @@ final class UnsafeTests: XCTestCase {
 
     func _testBadAccess3() {
         TestDB.withTemporaryContainer { db in
-            var managedObjects: MutableManagedObjectSet<Book>!
+            var managedObjects: ManagedObjectSet<Book>!
 
-            try db.readWrite(action: { _, writer in
-                try writer.insert(Author.self) {
-                    $0.encode(Author(id: .init()))
-                    $0[\.books].add(.init())
-                    managedObjects = $0[\.books]
-                }
+            try db.perform(action: { context in
+                let authorObject = context.insert(Author(id: .init()))
+
+                authorObject.books.add(context.insert(Book()))
+
+                managedObjects = authorObject.books
             })
 
             managedObjects.forEach {

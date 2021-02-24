@@ -1,10 +1,4 @@
-public struct PrimitiveAttributeMetadata {
-    internal init() {}
-}
-
-public protocol PrimitiveAttribute {
-    static var metadata: PrimitiveAttributeMetadata { get }
-}
+public protocol PrimitiveAttribute {}
 
 public protocol SupportedAttributeType {
     associatedtype PrimitiveAttributeType: PrimitiveAttribute
