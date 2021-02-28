@@ -94,3 +94,20 @@ public final class ManagedObject<PlainObject: ManagedObjectConvertible> {
         return .init(name: destination.name, instance: self.instance)
     }
 }
+
+public extension ManagedObject {
+    @discardableResult
+    func set<Destination: ManagedObjectConvertible>(
+        _ keyPath: KeyPath<PlainObject.Relations, ToOneRelation<Destination>>,
+        value: Destination,
+        in context: ManagedObjectContext
+    ) -> ManagedObject<Destination> {
+        if let currentObject = self[dynamicMember: keyPath] {
+            return currentObject.encode(value)
+        }
+
+        let newObject = context.insert(value)
+        self[dynamicMember: keyPath] = newObject
+        return newObject
+    }
+}

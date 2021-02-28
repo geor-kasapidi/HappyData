@@ -38,6 +38,15 @@ public struct SQLiteStoreDescription {
         self.modelVersions = modelVersions
     }
 
+    public func with(url: URL) -> SQLiteStoreDescription {
+        .init(
+            name: self.name,
+            url: url,
+            modelName: self.modelName,
+            modelVersions: self.modelVersions
+        )
+    }
+
     public func with(maxVersion: Int) -> SQLiteStoreDescription {
         .init(
             name: self.name,

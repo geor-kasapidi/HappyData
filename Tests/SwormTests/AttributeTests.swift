@@ -5,15 +5,8 @@ import XCTest
 
 @available(OSX 10.15, *)
 final class AttributeTests: XCTestCase {
-    private static let storeInfo = SQLiteStoreDescription(
-        name: "AttributeSetsDataModel",
-        url: FileManager.default.temporaryDirectory,
-        modelName: "AttributeSetsDataModel",
-        modelVersions: ["V0"]
-    )
-
     func testPrimitiveAttributeFullSetReadWrite() {
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             let sourceInstance = PrimitiveAttributeFullSet(
                 x1: .random(),
                 x2: .random(in: .min ... .max),
@@ -23,11 +16,11 @@ final class AttributeTests: XCTestCase {
                 x6: 100,
                 x7: 100,
                 x8: 100,
-                x9: Date(),
-                x10: "\(Int.random(in: .min ... .max))",
-                x11: Data(repeating: .random(in: .min ... .max), count: 16),
-                x12: .init(),
-                x13: URL(string: "https://stackoverflow.com")
+                x9: Bool.random() ? Date() : nil,
+                x10: Bool.random() ? "\(Int.random(in: .min ... .max))" : nil,
+                x11: Bool.random() ? Data(repeating: .random(in: .min ... .max), count: 16) : nil,
+                x12: Bool.random() ? .init() : nil,
+                x13: Bool.random() ? URL(string: "https://stackoverflow.com") : nil
             )
 
             try pc.perform { ctx in
@@ -43,7 +36,7 @@ final class AttributeTests: XCTestCase {
     }
 
     func testCustomAttributeSetReadWrite() {
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             let sourceInstances = [
                 CustomAttributeSet(
                     x1: .init(.init(x: 1, y: 2)),
@@ -79,7 +72,7 @@ final class AttributeTests: XCTestCase {
     }
 
     func testDemoAttributeSetRefReadWrite() {
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             let sourceInstance1 = DemoAttributeSetRef()
             sourceInstance1.x1 = 10
 
@@ -100,10 +93,10 @@ final class AttributeTests: XCTestCase {
         }
     }
 
-    func testPrimitiveAttributeFullSetReadWriteMeasure() {
+    func _testPrimitiveAttributeFullSetReadWriteMeasure() {
         let N = 10000
 
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             self.measure {
                 do {
                     try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
@@ -116,10 +109,10 @@ final class AttributeTests: XCTestCase {
         }
     }
 
-    func testPrimitiveAttributeFullSetWriteMeasure() {
+    func _testPrimitiveAttributeFullSetWriteMeasure() {
         let N = 10000
 
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             self.measure {
                 do {
                     try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
@@ -128,10 +121,10 @@ final class AttributeTests: XCTestCase {
         }
     }
 
-    func testPrimitiveAttributeFullSetReadMeasure() {
+    func _testPrimitiveAttributeFullSetReadMeasure() {
         let N = 10000
 
-        TestDB.withTemporaryContainer(store: Self.storeInfo) { pc in
+        TestDB.inMemoryContainer(store: DataModels.attributes) { pc in
             try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
 
             self.measure {

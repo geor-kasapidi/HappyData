@@ -9,27 +9,17 @@ final class MigrationsTests: XCTestCase {
     func testProgressiveMigrations() {
         let bundle = Bundle.module
 
-        let storeInfo = SQLiteStoreDescription(
-            name: "MigratableStore",
-            url: NSPersistentContainer.defaultDirectoryURL(), // not important here
-            modelName: "MigratableDataModel",
-            modelVersions: [
-                "V0",
-                .init(name: "V1", mappingModelName: "V0V1"),
-                .init(name: "V2", mappingModelName: "V1V2"),
-                "V3",
-            ]
-        )
+        let storeInfo = DataModels.migrations
 
         // all together
 
         do {
-            try TestTool.testMigration(
+            try TestTool.Migrations.test(
                 store: storeInfo,
                 bundle: bundle,
                 preAction: {
                     print("FIRST STEP")
-                    let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                    let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                     do {
                         try db.perform { context in
                             context.insert(MigratableModels.A(id: 1, name: "foo"))
@@ -42,7 +32,7 @@ final class MigrationsTests: XCTestCase {
                 },
                 postAction: {
                     print("LAST STEP")
-                    let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                    let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                     do {
                         let bs = try db.perform { context in
                             try context.fetch(MigratableModels.B.all)
@@ -91,14 +81,14 @@ final class MigrationsTests: XCTestCase {
         // step by step
 
         do {
-            try TestTool.testMigrationStepByStep(
+            try TestTool.Migrations.testStepByStep(
                 store: storeInfo,
                 bundle: bundle,
                 actions: [
                     0: {
                         print("STEP 0")
 
-                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                        let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             try db.perform { context in
                                 context.insert(MigratableModels.A(id: 1, name: "foo"))
@@ -112,7 +102,7 @@ final class MigrationsTests: XCTestCase {
                     1: {
                         print("STEP 1")
 
-                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                        let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             let bs = try db.perform { context in
                                 try context.fetch(MigratableModels.B.all)
@@ -131,7 +121,7 @@ final class MigrationsTests: XCTestCase {
                     2: {
                         print("STEP 2")
 
-                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                        let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             let bs = try db.perform { context in
                                 try context.fetch(MigratableModels.B.all)
@@ -150,7 +140,7 @@ final class MigrationsTests: XCTestCase {
                     3: {
                         print("STEP 3")
 
-                        let db = PersistentContainer(managedObjectContext: $0.suitableContextForCurrentThread)
+                        let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             try db.perform { context in
                                 context.insert(MigratableModels.C(foo: "foo"))

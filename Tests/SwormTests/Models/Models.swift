@@ -1,6 +1,30 @@
 import Foundation
 import Sworm
 
+enum MigratableModels {
+    struct A {
+        var id: Int = 0
+        var name: String = ""
+    }
+
+    struct B: Comparable {
+        static func < (lhs: MigratableModels.B, rhs: MigratableModels.B) -> Bool {
+            lhs.identifier < rhs.identifier
+        }
+
+        var identifier: Double = 0
+        var text: String = ""
+    }
+
+    struct C: Comparable {
+        static func < (lhs: MigratableModels.C, rhs: MigratableModels.C) -> Bool {
+            lhs.foo < rhs.foo
+        }
+
+        var foo: String = ""
+    }
+}
+
 struct PrimitiveAttributeFullSet: Equatable {
     var x1: Bool = false
 
@@ -70,4 +94,45 @@ final class DemoAttributeSetRef: Equatable {
 
     var x1: Int = .zero
     var x2: Int?
+}
+
+struct PredicateABCD: Equatable {
+    enum SomeEnum: String {
+        case foo
+        case bar
+    }
+
+    var a: Int = 0
+    var b: Int = 0
+    var c: String?
+    var d: SomeEnum?
+}
+
+struct PredicateIDURL: Equatable {
+    var id: UUID?
+    var url: URL?
+}
+
+enum BookLibrary {
+    struct Author: Equatable {
+        var id: UUID = .init()
+        var name: String = ""
+        var age: Int = 0
+    }
+
+    struct Book: Equatable {
+        struct Review: Equatable {
+            var id: UUID = .init()
+            var text: String = ""
+            var mark: Int = 0
+        }
+
+        struct Cover: Equatable {
+            var url: URL?
+        }
+
+        var id: UUID = .init()
+        var name: String = ""
+        var year: Int = 0
+    }
 }

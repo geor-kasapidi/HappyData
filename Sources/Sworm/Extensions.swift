@@ -55,9 +55,3 @@ public extension NSManagedObjectContext {
         }
     }
 }
-
-public extension NSPersistentContainer {
-    func suitableContextForCurrentThread() -> NSManagedObjectContext {
-        Thread.isMainThread ? self.viewContext : self.newBackgroundContext()
-    }
-}

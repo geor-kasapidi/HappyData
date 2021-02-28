@@ -1,63 +1,89 @@
 import Foundation
+
+@testable
 import Sworm
 import XCTest
+
+// do not pass references to context-produced objects like
+// managed object/sets/iterators, etc. to external scope
+// outside "perform" closure
+// it's unsafe and may leads to app crash or runtime undefined behavior
 
 @available(OSX 10.15, *)
 // Remove low dash to test
 final class UnsafeTests: XCTestCase {
-    func _testBadAccess1() {
-        TestDB.withTemporaryContainer { db in
-            let book = Book(
-                id: .init(),
-                name: "my book",
-                date: Date()
-            )
+    func _testDeallocatedReferenceAccess1() {
+        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+            let book = BookLibrary.Book(name: "some book")
 
-            try db.perform(action: { context in
-                context.insert(book)
+            try pc.perform(action: { ctx in
+                ctx.insert(book)
             })
 
-            let managedObject = try db.perform(action: { context in
-                try context.fetchOne(Book.all)
+            let managedObject = try pc.perform(action: { ctx in
+                try ctx.fetchOne(BookLibrary.Book.all)
             })
 
-            _ = try? managedObject?.decode() // bad access here
+            _ = try? managedObject?.decode()
         }
     }
 
-    func _testBadAccess2() {
-        TestDB.withTemporaryContainer { db in
-            try db.perform(action: { context in
-                context
-                    .insert(Author(id: .init()))
-                    .books
-                    .add(context.insert(Book()))
+    func _testDeallocatedReferenceAccess2() {
+        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+            try pc.perform(action: { ctx in
+                let authorObject = ctx.insert(BookLibrary.Author())
+                authorObject.books.add(ctx.insert(BookLibrary.Book()))
             })
 
-            let managedObjects = try db.perform(action: { context in
-                try context.fetchOne(Author.all)?.books
-            })!
+            let managedObjects = try pc.perform(action: { ctx in
+                try ctx.fetchOne(BookLibrary.Author.all)?.books
+            })
 
-            managedObjects.forEach {
+            managedObjects?.forEach {
                 print($0)
             }
         }
     }
 
-    func _testBadAccess3() {
-        TestDB.withTemporaryContainer { db in
-            var managedObjects: ManagedObjectSet<Book>!
+    func _testDeallocatedReferenceAccess3() {
+        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+            var managedObjects: ManagedObjectSet<BookLibrary.Book>?
 
-            try db.perform(action: { context in
-                let authorObject = context.insert(Author(id: .init()))
-
-                authorObject.books.add(context.insert(Book()))
-
+            try pc.perform(action: { ctx in
+                let authorObject = ctx.insert(BookLibrary.Author())
+                authorObject.books.add(ctx.insert(BookLibrary.Book()))
                 managedObjects = authorObject.books
             })
 
-            managedObjects.forEach {
+            managedObjects?.forEach {
                 print($0)
+            }
+        }
+    }
+
+    func _testIterator() {
+        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+            try pc.perform(action: { ctx in
+                let authorObject = ctx.insert(BookLibrary.Author())
+                authorObject.books.add(ctx.insert(BookLibrary.Book()))
+            })
+
+            do {
+                let iterator = try pc.perform(action: { ctx in
+                    try ctx.fetchOne(BookLibrary.Author.all)!.books.makeIterator()
+                })
+
+                XCTAssert(Array(AnySequence({ iterator })).isEmpty)
+            }
+
+            do {
+                let iterator: ManagedObjectSetIterator<BookLibrary.Book> = try pc.perform(action: { ctx in
+                    let author = try ctx.fetchOne(BookLibrary.Author.all)!
+                    author.books.forEach { _ in }
+                    return author.books.makeIterator()
+                })
+
+                XCTAssert(!Array(AnySequence({ iterator })).isEmpty)
             }
         }
     }

@@ -1,5 +1,11 @@
 import CoreData
 
+public extension URL {
+    static var devNull: URL {
+        URL(fileURLWithPath: "/dev/null")
+    }
+}
+
 public extension Bundle {
     enum BundleCoreDataError: Swift.Error {
         case mappingModelNotFound(name: String)
@@ -66,6 +72,14 @@ public extension NSPersistentStoreDescription {
 }
 
 // MARK: - Internal
+
+extension FileManager {
+    func createUniqueTemporaryDirectory() throws -> URL {
+        let url = self.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try self.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+        return url
+    }
+}
 
 extension NSPersistentStoreCoordinator {
     func removePersistentStores() throws {
