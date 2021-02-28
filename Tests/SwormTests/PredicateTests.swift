@@ -36,7 +36,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.a < 50 && \PredicateABCD.b > 20 || \PredicateABCD.b >= 100
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -49,7 +49,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = (\PredicateABCD.a < 50 && \PredicateABCD.b > 20 || \PredicateABCD.b >= 100) && \PredicateABCD.b != 40
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -78,7 +78,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.c != nil && \PredicateABCD.a > 30
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -90,7 +90,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.c == nil && \PredicateABCD.a < 50
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -119,7 +119,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.d == .bar
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -132,7 +132,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.d != .bar || \PredicateABCD.d == nil
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -201,7 +201,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.c === ["a", "d"]
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -214,7 +214,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = \PredicateABCD.c === ["a", "d"] || \PredicateABCD.a === [1, 2]
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map({ try $0.decode() })
+                    try ctx.fetch(PredicateABCD.all.where(query).sort(\.a)).map { try $0.decode() }
                 }
 
                 XCTAssert(destinationEntites == [
@@ -273,7 +273,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = Query.beginsWith(\PredicateABCD.c, "foo")
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query)).map({ try $0.decode(\.c) })
+                    try ctx.fetch(PredicateABCD.all.where(query)).map { try $0.decode(\.c) }
                 }
 
                 XCTAssert(Set(destinationEntites) == [
@@ -286,7 +286,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = Query.endsWith(\PredicateABCD.c, "foo")
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query)).map({ try $0.decode(\.c) })
+                    try ctx.fetch(PredicateABCD.all.where(query)).map { try $0.decode(\.c) }
                 }
 
                 XCTAssert(Set(destinationEntites) == [
@@ -299,7 +299,7 @@ final class PredicateTests: XCTestCase {
                 let query: Predicate = Query.contains(\PredicateABCD.c, "1")
 
                 let destinationEntites = try pc.perform { ctx in
-                    try ctx.fetch(PredicateABCD.all.where(query)).map({ try $0.decode(\.c) })
+                    try ctx.fetch(PredicateABCD.all.where(query)).map { try $0.decode(\.c) }
                 }
 
                 XCTAssert(Set(destinationEntites) == [

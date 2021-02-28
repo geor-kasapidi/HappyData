@@ -36,7 +36,7 @@ final class MigrationsTests: XCTestCase {
                     do {
                         let bs = try db.perform { context in
                             try context.fetch(MigratableModels.B.all)
-                                .map({ try $0.decode() })
+                                .map { try $0.decode() }
                                 .sorted()
                         }
 
@@ -61,7 +61,7 @@ final class MigrationsTests: XCTestCase {
                     do {
                         let cs = try db.perform { context in
                             try context.fetch(MigratableModels.C.all)
-                                .map({ try $0.decode() })
+                                .map { try $0.decode() }
                                 .sorted()
                         }
 
@@ -106,7 +106,7 @@ final class MigrationsTests: XCTestCase {
                         do {
                             let bs = try db.perform { context in
                                 try context.fetch(MigratableModels.B.all)
-                                    .map({ try $0.decode() })
+                                    .map { try $0.decode() }
                                     .sorted()
                             }
 
@@ -125,7 +125,7 @@ final class MigrationsTests: XCTestCase {
                         do {
                             let bs = try db.perform { context in
                                 try context.fetch(MigratableModels.B.all)
-                                    .map({ try $0.decode() })
+                                    .map { try $0.decode() }
                                     .sorted()
                             }
 
@@ -154,7 +154,7 @@ final class MigrationsTests: XCTestCase {
                         do {
                             let cs = try db.perform { context in
                                 try context.fetch(MigratableModels.C.all)
-                                    .map({ try $0.decode() })
+                                    .map { try $0.decode() }
                                     .sorted()
                             }
 

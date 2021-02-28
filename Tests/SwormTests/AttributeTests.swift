@@ -64,7 +64,7 @@ final class AttributeTests: XCTestCase {
 
             let destinationInstances = try pc.perform { ctx in
                 try ctx.fetch(CustomAttributeSet.all.sort(\.x5))
-                    .map({ try $0.decode() })
+                    .map { try $0.decode() }
             }
 
             XCTAssert(sourceInstances == destinationInstances)
@@ -86,7 +86,7 @@ final class AttributeTests: XCTestCase {
 
             let destinationInstances = try pc.perform { ctx in
                 try ctx.fetch(DemoAttributeSetRef.all.sort(\.x1, ascending: false))
-                    .map({ try $0.decode() })
+                    .map { try $0.decode() }
             }
 
             XCTAssert([sourceInstance1, sourceInstance2] == destinationInstances)
@@ -102,7 +102,7 @@ final class AttributeTests: XCTestCase {
                     try self.writeRandomPrimitiveAttributeFullSets(n: N, pc: pc)
 
                     _ = try pc.perform { ctx in
-                        try ctx.fetch(PrimitiveAttributeFullSet.all).map({ try $0.decode() })
+                        try ctx.fetch(PrimitiveAttributeFullSet.all).map { try $0.decode() }
                     }
                 } catch {}
             }
@@ -130,7 +130,7 @@ final class AttributeTests: XCTestCase {
             self.measure {
                 do {
                     _ = try pc.perform { ctx in
-                        try ctx.fetch(PrimitiveAttributeFullSet.all).map({ try $0.decode() })
+                        try ctx.fetch(PrimitiveAttributeFullSet.all).map { try $0.decode() }
                     }
                 } catch {}
             }

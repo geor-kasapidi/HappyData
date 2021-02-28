@@ -73,7 +73,7 @@ final class UnsafeTests: XCTestCase {
                     try ctx.fetchOne(BookLibrary.Author.all)!.books.makeIterator()
                 })
 
-                XCTAssert(Array(AnySequence({ iterator })).isEmpty)
+                XCTAssert(Array(AnySequence { iterator }).isEmpty)
             }
 
             do {
@@ -83,7 +83,7 @@ final class UnsafeTests: XCTestCase {
                     return author.books.makeIterator()
                 })
 
-                XCTAssert(!Array(AnySequence({ iterator })).isEmpty)
+                XCTAssert(!Array(AnySequence { iterator }).isEmpty)
             }
         }
     }

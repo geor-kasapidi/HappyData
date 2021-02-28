@@ -17,6 +17,6 @@
 
 3) [kean.blog](https://kean.blog/post/core-data-progressive-migrations)
 
-## SwiftFormat
+## Code style
 
-`swiftformat --disable redundantSelf,trailingClosures --swiftversion 5.3 .`
+`swiftformat --disable redundantSelf --swiftversion 5.3 .`
