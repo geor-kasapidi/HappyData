@@ -99,15 +99,33 @@ public extension ManagedObject {
     @discardableResult
     func set<Destination: ManagedObjectConvertible>(
         _ keyPath: KeyPath<PlainObject.Relations, ToOneRelation<Destination>>,
-        value: Destination,
-        in context: ManagedObjectContext
-    ) -> ManagedObject<Destination> {
-        if let currentObject = self[dynamicMember: keyPath] {
-            return currentObject.encode(value)
+        value: Destination?,
+        context: ManagedObjectContext
+    ) -> Self {
+        guard let value = value else {
+            return self.delete(keyPath, context: context)
         }
 
-        let newObject = context.insert(value)
-        self[dynamicMember: keyPath] = newObject
-        return newObject
+        if let object = self[dynamicMember: keyPath] {
+            object.encode(value)
+        } else {
+            self[dynamicMember: keyPath] = context.insert(value)
+        }
+
+        return self
+    }
+
+    @discardableResult
+    func delete<Destination: ManagedObjectConvertible>(
+        _ keyPath: KeyPath<PlainObject.Relations, ToOneRelation<Destination>>,
+        context: ManagedObjectContext
+    ) -> Self {
+        if let object = self[dynamicMember: keyPath] {
+            self[dynamicMember: keyPath] = nil
+
+            context.delete(object)
+        }
+
+        return self
     }
 }

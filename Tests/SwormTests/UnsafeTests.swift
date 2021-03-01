@@ -13,7 +13,7 @@ import XCTest
 // Remove low dash to test
 final class UnsafeTests: XCTestCase {
     func _testDeallocatedReferenceAccess1() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             let book = BookLibrary.Book(name: "some book")
 
             try pc.perform(action: { ctx in
@@ -29,7 +29,7 @@ final class UnsafeTests: XCTestCase {
     }
 
     func _testDeallocatedReferenceAccess2() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { ctx in
                 let authorObject = ctx.insert(BookLibrary.Author())
                 authorObject.books.add(ctx.insert(BookLibrary.Book()))
@@ -46,7 +46,7 @@ final class UnsafeTests: XCTestCase {
     }
 
     func _testDeallocatedReferenceAccess3() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             var managedObjects: ManagedObjectSet<BookLibrary.Book>?
 
             try pc.perform(action: { ctx in
@@ -62,7 +62,7 @@ final class UnsafeTests: XCTestCase {
     }
 
     func _testIterator() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { ctx in
                 let authorObject = ctx.insert(BookLibrary.Author())
                 authorObject.books.add(ctx.insert(BookLibrary.Book()))

@@ -5,7 +5,7 @@ import SwormTools
 import XCTest
 
 enum TestDB {
-    static func inMemoryContainer(
+    static func temporaryContainer(
         store: SQLiteStoreDescription,
         action: (PersistentContainer) throws -> Void
     ) {

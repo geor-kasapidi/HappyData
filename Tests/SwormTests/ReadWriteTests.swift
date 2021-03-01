@@ -6,7 +6,7 @@ import XCTest
 @available(OSX 10.15, *)
 final class ReadWriteTests: XCTestCase {
     func testCRUD() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             let Author = BookLibrary.Author(
                 name: "cool author",
                 age: 50
@@ -145,7 +145,7 @@ final class ReadWriteTests: XCTestCase {
     }
 
     func testRequestSortLimit() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { context in
                 (1 ... 10).reversed().forEach {
                     context.insert(
@@ -173,7 +173,7 @@ final class ReadWriteTests: XCTestCase {
     }
 
     func testNotUniqueInsertFail() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             let id = UUID()
 
             var err: Error?
@@ -192,7 +192,7 @@ final class ReadWriteTests: XCTestCase {
     }
 
     func testMultiThreadReadWrite() {
-        TestDB.inMemoryContainer(store: DataModels.bookLibrary) { pc in
+        TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             let group = DispatchGroup()
 
             let range = 1 ... 100

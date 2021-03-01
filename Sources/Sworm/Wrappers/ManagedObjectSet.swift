@@ -32,12 +32,12 @@ public final class ManagedObjectSet<PlainObject: ManagedObjectConvertible>: Sequ
         .init(iterator: self.set.makeIterator())
     }
 
-    public func add(_ value: ManagedObject<PlainObject>) {
-        self.set.add(value.instance)
+    public func add(_ object: ManagedObject<PlainObject>) {
+        self.set.add(object.instance)
     }
 
-    public func remove(_ value: ManagedObject<PlainObject>) {
-        self.set.remove(value.instance)
+    public func remove(_ object: ManagedObject<PlainObject>) {
+        self.set.remove(object.instance)
     }
 }
 
@@ -59,11 +59,27 @@ public final class ManagedObjectOrderedSet<PlainObject: ManagedObjectConvertible
         .init(iterator: self.set.makeIterator())
     }
 
-    public func add(_ value: ManagedObject<PlainObject>) {
-        self.set.add(value.instance)
+    public func add(_ object: ManagedObject<PlainObject>) {
+        self.set.add(object.instance)
     }
 
-    public func remove(_ value: ManagedObject<PlainObject>) {
-        self.set.remove(value.instance)
+    public func remove(_ object: ManagedObject<PlainObject>) {
+        self.set.remove(object.instance)
+    }
+}
+
+public extension ManagedObjectSet {
+    func delete(_ object: ManagedObject<PlainObject>, context: ManagedObjectContext) {
+        self.remove(object)
+
+        context.delete(object)
+    }
+}
+
+public extension ManagedObjectOrderedSet {
+    func delete(_ object: ManagedObject<PlainObject>, context: ManagedObjectContext) {
+        self.remove(object)
+
+        context.delete(object)
     }
 }
