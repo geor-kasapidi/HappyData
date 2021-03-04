@@ -3,13 +3,16 @@ import CoreData
 public final class PersistentContainer {
     private let managedObjectContext: () throws -> NSManagedObjectContext
     private let logError: ((Swift.Error) -> Void)?
+    private let cleanUpContextAfterExecution: Bool
 
     public init(
         managedObjectContext: @escaping () throws -> NSManagedObjectContext,
-        logError: ((Swift.Error) -> Void)? = nil
+        logError: ((Swift.Error) -> Void)? = nil,
+        cleanUpContextAfterExecution: Bool = true
     ) {
         self.managedObjectContext = managedObjectContext
         self.logError = logError
+        self.cleanUpContextAfterExecution = cleanUpContextAfterExecution
     }
 
     @discardableResult
@@ -17,7 +20,9 @@ public final class PersistentContainer {
         do {
             let instance = try self.managedObjectContext()
 
-            return try instance.perform(cleanUpAfterExecution: true) {
+            return try instance.perform(
+                cleanUpAfterExecution: self.cleanUpContextAfterExecution
+            ) {
                 try action(ManagedObjectContext(instance))
             }
         } catch {
