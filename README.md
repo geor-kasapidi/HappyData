@@ -19,4 +19,4 @@
 
 ## Code style
 
-`swiftformat --disable redundantSelf --swiftversion 5.3 .`
+`swiftformat --self insert --swiftversion 5.3 .`
