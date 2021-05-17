@@ -11,7 +11,7 @@ public final class ManagedObjectContext {
     public func insert<PlainObject: ManagedObjectConvertible>(_ value: PlainObject) throws -> ManagedObject<PlainObject> {
         let managedObject = try DataHelper.insert(entity: PlainObject.entityName, into: self.instance)
 
-        return .init(instance: managedObject).encode(value)
+        return ManagedObject(instance: managedObject).encode(value)
     }
 
     public func delete<PlainObject: ManagedObjectConvertible>(
