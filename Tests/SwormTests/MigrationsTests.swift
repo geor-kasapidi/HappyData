@@ -22,8 +22,8 @@ final class MigrationsTests: XCTestCase {
                     let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                     do {
                         try db.perform { context in
-                            context.insert(MigratableModels.A(id: 1, name: "foo"))
-                            context.insert(MigratableModels.A(id: 2, name: "bar"))
+                            try context.insert(MigratableModels.A(id: 1, name: "foo"))
+                            try context.insert(MigratableModels.A(id: 2, name: "bar"))
                         }
                     } catch {
                         XCTFail(error.localizedDescription)
@@ -50,8 +50,8 @@ final class MigrationsTests: XCTestCase {
 
                     do {
                         try db.perform { context in
-                            context.insert(MigratableModels.C(foo: "foo"))
-                            context.insert(MigratableModels.C(foo: "bar"))
+                            try context.insert(MigratableModels.C(foo: "foo"))
+                            try context.insert(MigratableModels.C(foo: "bar"))
                         }
                     } catch {
                         XCTFail(error.localizedDescription)
@@ -91,8 +91,8 @@ final class MigrationsTests: XCTestCase {
                         let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             try db.perform { context in
-                                context.insert(MigratableModels.A(id: 1, name: "foo"))
-                                context.insert(MigratableModels.A(id: 2, name: "bar"))
+                                try context.insert(MigratableModels.A(id: 1, name: "foo"))
+                                try context.insert(MigratableModels.A(id: 2, name: "bar"))
                             }
                         } catch {
                             XCTFail(error.localizedDescription)
@@ -143,8 +143,8 @@ final class MigrationsTests: XCTestCase {
                         let db = PersistentContainer(managedObjectContext: $0.newBackgroundContext)
                         do {
                             try db.perform { context in
-                                context.insert(MigratableModels.C(foo: "foo"))
-                                context.insert(MigratableModels.C(foo: "bar"))
+                                try context.insert(MigratableModels.C(foo: "foo"))
+                                try context.insert(MigratableModels.C(foo: "bar"))
                             }
                         } catch {
                             XCTFail(error.localizedDescription)

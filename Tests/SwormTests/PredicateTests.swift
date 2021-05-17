@@ -27,8 +27,8 @@ final class PredicateTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -69,8 +69,8 @@ final class PredicateTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -110,8 +110,8 @@ final class PredicateTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -155,8 +155,8 @@ final class PredicateTests: XCTestCase {
             XCTAssert(ids.count == urls.count)
 
             try pc.perform { ctx in
-                zip(ids, urls).forEach {
-                    ctx.insert(PredicateIDURL(id: $0.0, url: $0.1))
+                try zip(ids, urls).forEach {
+                    try ctx.insert(PredicateIDURL(id: $0.0, url: $0.1))
                 }
             }
 
@@ -192,8 +192,8 @@ final class PredicateTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -237,8 +237,8 @@ final class PredicateTests: XCTestCase {
             let ids = Array(sourceEntries.prefix(N / 2).map(\.id))
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -264,8 +264,8 @@ final class PredicateTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceEntries.forEach {
-                    ctx.insert($0)
+                try sourceEntries.forEach {
+                    try ctx.insert($0)
                 }
             }
 

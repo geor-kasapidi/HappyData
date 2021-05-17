@@ -91,3 +91,4 @@ iOSInjectionProject/
 Sources/HappyData/.DS_Store
 .DS_Store
 .swiftpm
+*.xcworkspace/

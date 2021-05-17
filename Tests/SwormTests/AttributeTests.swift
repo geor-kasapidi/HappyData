@@ -24,7 +24,7 @@ final class AttributeTests: XCTestCase {
             )
 
             try pc.perform { ctx in
-                ctx.insert(sourceInstance)
+                try ctx.insert(sourceInstance)
             }
 
             let destinationInstance = try pc.perform { ctx in
@@ -57,8 +57,8 @@ final class AttributeTests: XCTestCase {
             ]
 
             try pc.perform { ctx in
-                sourceInstances.forEach {
-                    ctx.insert($0)
+                try sourceInstances.forEach {
+                    try ctx.insert($0)
                 }
             }
 
@@ -80,8 +80,8 @@ final class AttributeTests: XCTestCase {
             sourceInstance2.x2 = 10
 
             try pc.perform { ctx in
-                ctx.insert(sourceInstance1)
-                ctx.insert(sourceInstance2)
+                try ctx.insert(sourceInstance1)
+                try ctx.insert(sourceInstance2)
             }
 
             let destinationInstances = try pc.perform { ctx in
@@ -141,8 +141,8 @@ final class AttributeTests: XCTestCase {
         try pc.perform { ctx in
             try ctx.batchDelete(PrimitiveAttributeFullSet.all)
 
-            (0 ..< n).forEach { x in
-                ctx.insert(PrimitiveAttributeFullSet(
+            try (0 ..< n).forEach { x in
+                try ctx.insert(PrimitiveAttributeFullSet(
                     x1: .random(),
                     x2: .random(in: .min ... .max),
                     x3: .random(in: .min ... .max),

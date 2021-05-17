@@ -21,7 +21,7 @@ final class OtherTests: XCTestCase {
 
         do {
             try pc.perform { ctx in
-                ctx.insert(BookLibrary.Book())
+                try ctx.insert(BookLibrary.Book())
             }
         } catch {
             XCTAssert(error is NotReadyError)

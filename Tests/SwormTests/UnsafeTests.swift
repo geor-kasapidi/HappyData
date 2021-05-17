@@ -17,7 +17,7 @@ final class UnsafeTests: XCTestCase {
             let book = BookLibrary.Book(name: "some book")
 
             try pc.perform(action: { ctx in
-                ctx.insert(book)
+                try ctx.insert(book)
             })
 
             let managedObject = try pc.perform(action: { ctx in
@@ -31,8 +31,8 @@ final class UnsafeTests: XCTestCase {
     func _testDeallocatedReferenceAccess2() {
         TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { ctx in
-                let authorObject = ctx.insert(BookLibrary.Author())
-                authorObject.books.add(ctx.insert(BookLibrary.Book()))
+                let authorObject = try ctx.insert(BookLibrary.Author())
+                authorObject.books.add(try ctx.insert(BookLibrary.Book()))
             })
 
             let managedObjects = try pc.perform(action: { ctx in
@@ -50,8 +50,8 @@ final class UnsafeTests: XCTestCase {
             var managedObjects: ManagedObjectSet<BookLibrary.Book>?
 
             try pc.perform(action: { ctx in
-                let authorObject = ctx.insert(BookLibrary.Author())
-                authorObject.books.add(ctx.insert(BookLibrary.Book()))
+                let authorObject = try ctx.insert(BookLibrary.Author())
+                authorObject.books.add(try ctx.insert(BookLibrary.Book()))
                 managedObjects = authorObject.books
             })
 
@@ -64,8 +64,8 @@ final class UnsafeTests: XCTestCase {
     func _testIterator() {
         TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { ctx in
-                let authorObject = ctx.insert(BookLibrary.Author())
-                authorObject.books.add(ctx.insert(BookLibrary.Book()))
+                let authorObject = try ctx.insert(BookLibrary.Author())
+                authorObject.books.add(try ctx.insert(BookLibrary.Book()))
             })
 
             do {

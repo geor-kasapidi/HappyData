@@ -34,11 +34,11 @@ final class ReadWriteTests: XCTestCase {
             // insert objects
 
             try pc.perform { ctx in
-                let authorObject = ctx.insert(Author)
-                let bookObject = ctx.insert(Book)
-                let review1Object = ctx.insert(Review1)
-                let review2Object = ctx.insert(Review2)
-                let coverObject = ctx.insert(Cover)
+                let authorObject = try ctx.insert(Author)
+                let bookObject = try ctx.insert(Book)
+                let review1Object = try ctx.insert(Review1)
+                let review2Object = try ctx.insert(Review2)
+                let coverObject = try ctx.insert(Cover)
 
                 bookObject.reviews.add(review1Object)
                 bookObject.reviews.add(review2Object)
@@ -102,7 +102,7 @@ final class ReadWriteTests: XCTestCase {
                     ctx.delete($0)
                 }
 
-                book.reviews.add(ctx.insert(Review3))
+                try book.reviews.add(ctx.insert(Review3))
             }
 
             // read and check
@@ -147,8 +147,8 @@ final class ReadWriteTests: XCTestCase {
     func testRequestSortLimit() {
         TestDB.temporaryContainer(store: DataModels.bookLibrary) { pc in
             try pc.perform(action: { context in
-                (1 ... 10).reversed().forEach {
-                    context.insert(
+                try (1 ... 10).reversed().forEach {
+                    try context.insert(
                         BookLibrary.Book(
                             name: "\($0)",
                             year: $0 % 2 == 0 ? 2010 : 2020
@@ -180,8 +180,8 @@ final class ReadWriteTests: XCTestCase {
 
             do {
                 try pc.perform { ctx in
-                    ctx.insert(BookLibrary.Book(id: id))
-                    ctx.insert(BookLibrary.Book(id: id))
+                    try ctx.insert(BookLibrary.Book(id: id))
+                    try ctx.insert(BookLibrary.Book(id: id))
                 }
             } catch {
                 err = error
@@ -203,7 +203,7 @@ final class ReadWriteTests: XCTestCase {
                 DispatchQueue.global().asyncAfter(deadline: .now() + .random(in: 0.1 ... 0.2)) {
                     do {
                         try pc.perform { ctx in
-                            ctx.insert(BookLibrary.Book(year: number))
+                            try ctx.insert(BookLibrary.Book(year: number))
                         }
                     } catch {
                         XCTFail(error.localizedDescription)

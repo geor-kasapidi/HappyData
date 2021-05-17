@@ -101,7 +101,7 @@ public extension ManagedObject {
         _ keyPath: KeyPath<PlainObject.Relations, ToOneRelation<Destination>>,
         value: Destination?,
         context: ManagedObjectContext
-    ) -> Self {
+    ) throws -> Self {
         guard let value = value else {
             return self.delete(keyPath, context: context)
         }
@@ -109,7 +109,7 @@ public extension ManagedObject {
         if let object = self[dynamicMember: keyPath] {
             object.encode(value)
         } else {
-            self[dynamicMember: keyPath] = context.insert(value)
+            self[dynamicMember: keyPath] = try context.insert(value)
         }
 
         return self
