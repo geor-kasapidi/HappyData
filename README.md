@@ -21,17 +21,33 @@ At the same time, CoreData has many advantages - a powerful visual editor for da
 
 Sworm is a tool that hides the complexity of CoreData from the developer, but keeps the advantages.
 
-## Usage
+## How to use
 
-[Basic](docs/basic_usage.md)
+[Basic usage](docs/basic_usage.md)
 
-## Links
+[Attributes](docs/attributes.md)
 
-[williamboles.me](https://williamboles.me/progressive-core-data-migration/)
+[Queries](docs/queries.md)
 
-[objc.io](https://www.objc.io/issues/4-core-data/core-data-migration/#progressive-migrations)
+[Read and write your data graph](docs/read_write.md)
 
-[kean.blog](https://kean.blog/post/core-data-progressive-migrations)
+[Proper setup of PersistentContainer](docs/setup_pc.md)
+
+[Progressive migrations](docs/migrations.md)
+
+## Examples
+
+See tests
+
+## Installation
+
+Use SPM:
+
+``` swift
+dependencies: [
+    .package(url: "https://github.com/geor-kasapidi/HappyData.git", .upToNextMajor(from: "1.0.0"))
+]
+```
 
 ## Code style
 
