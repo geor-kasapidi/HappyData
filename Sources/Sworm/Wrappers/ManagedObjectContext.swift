@@ -3,7 +3,7 @@ import CoreData
 public final class ManagedObjectContext {
     unowned let instance: NSManagedObjectContext
 
-    public init(_ instance: NSManagedObjectContext) {
+    internal init(_ instance: NSManagedObjectContext) {
         self.instance = instance
     }
 
