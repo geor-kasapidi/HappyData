@@ -37,7 +37,7 @@ Sworm is a tool that hides the complexity of CoreData from the developer, but ke
 
 ## Examples
 
-See tests
+[See tests](/Tests/SwormTests/)
 
 ## Installation
 
